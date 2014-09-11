@@ -16,7 +16,7 @@ This module is built for use with Puppet v3 on the following OS families.
 * EL 5
 * Suse 11
 
-This module uses the custom types 'zypprepo' (https://github.com/deadpoint/puppet-zypprepo) and 'rpmkey' (https://github.com/stschulte/puppet-rpmkey)
+This module uses the custom types [zypprepo](https://github.com/deadpoint/puppet-zypprepo) and [rpmkey](https://github.com/stschulte/puppet-rpmkey).
 
 ===
 
