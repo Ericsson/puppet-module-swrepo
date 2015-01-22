@@ -21,7 +21,7 @@ define swrepo::repo (
   case $repotype {
     'yum': {
       yumrepo { $name:
-        baseurl  => $baseurl,
+        baseurl  => downcase($baseurl),
         descr    => $descr,
         enabled  => $enabled,
         gpgcheck => $gpgcheck,
@@ -33,7 +33,7 @@ define swrepo::repo (
     }
     'zypper': {
       zypprepo { $name:
-        baseurl      => $baseurl,
+        baseurl      => downcase($baseurl),
         descr        => $descr,
         enabled      => $enabled,
         gpgcheck     => $gpgcheck,
