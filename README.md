@@ -35,6 +35,12 @@ Hash of repositories to configure.
 
 - *Default*: undef
 
+hiera_merge
+-----
+Boolean to control merges of all found instances of repositories in Hiera. This is useful for specifying repositories resources at different levels of the hierarchy and having them all included in the catalog.
+
+- *Default*: false
+
 ===
 
 # Define swrepo::repo
