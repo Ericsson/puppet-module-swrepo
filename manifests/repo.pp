@@ -41,6 +41,7 @@ define swrepo::repo (
         priority     => $priority,
         keeppackages => $keeppackages,
         type         => $type,
+        autorefresh  => $autorefresh,
       }
     }
     'apt': {
