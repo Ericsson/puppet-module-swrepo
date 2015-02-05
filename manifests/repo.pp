@@ -5,23 +5,30 @@
 define swrepo::repo (
   $repotype,
   $baseurl,
-  $enabled       = '1',
-  $autorefresh   = undef,
-  $gpgcheck      = undef,
-  $gpgkey_keyid  = undef,
-  $gpgkey_source = undef,
-  $priority      = undef,
-  $keeppackages  = undef,
-  $type          = undef,
-  $descr         = undef,
-  $exclude       = undef,
-  $proxy         = undef,
+  $enabled          = '1',
+  $autorefresh      = undef,
+  $gpgcheck         = undef,
+  $gpgkey_keyid     = undef,
+  $gpgkey_source    = undef,
+  $priority         = undef,
+  $keeppackages     = undef,
+  $type             = undef,
+  $descr            = undef,
+  $exclude          = undef,
+  $proxy            = undef,
+  $downcase_baseurl = false,
 ) {
+
+  if $downcase_baseurl {
+    $baseurl_real = downcase($baseurl)
+  } else {
+    $baseurl_real = $baseurl
+  }
 
   case $repotype {
     'yum': {
       yumrepo { $name:
-        baseurl  => downcase($baseurl),
+        baseurl  => $baseurl_real,
         descr    => $descr,
         enabled  => $enabled,
         gpgcheck => $gpgcheck,
@@ -33,7 +40,7 @@ define swrepo::repo (
     }
     'zypper': {
       zypprepo { $name:
-        baseurl      => downcase($baseurl),
+        baseurl      => $baseurl_real,
         descr        => $descr,
         enabled      => $enabled,
         gpgcheck     => $gpgcheck,
