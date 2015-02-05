@@ -3,8 +3,9 @@
 # Module to manage swrepo
 #
 class swrepo (
-  $repotype = 'USE_DEFAULT',
-  $repos    = undef,
+  $repotype     = 'USE_DEFAULT',
+  $repos        = undef,
+  $hiera_merge  = false,
 ) {
 
   case $::osfamily {
@@ -42,8 +43,20 @@ class swrepo (
     repotype => $_repotype,
   }
 
-  if $repos {
-    validate_hash($repos)
-    create_resources('swrepo::repo', $repos, $defaults)
+  if type($hiera_merge) == 'string' {
+    $hiera_merge_real = str2bool($hiera_merge)
+  } else {
+    $hiera_merge_real = $hiera_merge
+  }
+  validate_bool($hiera_merge_real)
+
+  if $repos != undef {
+    if $hiera_merge_real == true {
+      $repos_real = hiera_hash('swrepo::repos')
+    } else {
+      $repos_real = $repos
+    }
+    validate_hash($repos_real)
+    create_resources('swrepo::repo', $repos_real, $defaults)
   }
 }
