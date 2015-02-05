@@ -127,3 +127,9 @@ URL to the proxy server that yum should use.
 
 - *Default*: undef
 
+downcase_baseurl
+----------------
+Boolean to control whether or not `baseurl` should be converted to lowercase.
+
+- *Default*: false
+
