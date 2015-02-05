@@ -33,7 +33,6 @@ class swrepo (
     }
   }
 
-
   if $repotype == 'USE_DEFAULT' {
     $_repotype = $default_repotype
   } else {
@@ -60,5 +59,4 @@ class swrepo (
     validate_hash($repos_real)
     create_resources('swrepo::repo', $repos_real, $defaults)
   }
-
 }
