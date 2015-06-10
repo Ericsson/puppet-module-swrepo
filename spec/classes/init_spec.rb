@@ -9,6 +9,15 @@ describe 'swrepo' do
       it { should contain_class('swrepo') }
     end
 
+    context "where osfamily is Suse 12" do
+      let :facts do
+        { :osfamily          => 'Suse',
+          :lsbmajdistrelease => '12',
+        }
+      end
+      it { should contain_class('swrepo') }
+    end
+
     context "where osfamily is Suse 11" do
       let :facts do
         { :osfamily          => 'Suse',
@@ -34,7 +43,7 @@ describe 'swrepo' do
     context "where Suse version is unsupported" do
       let :facts do
         { :osfamily          => 'Suse',
-          :lsbmajdistrelease => '12',
+          :lsbmajdistrelease => '9',
         }
       end
       it 'should fail' do
