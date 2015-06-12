@@ -17,7 +17,7 @@ class swrepo (
         '10': {
           fail('Suse 10 not yet supported')
         }
-        '11': {
+        '11','12': {
           $default_repotype = 'zypper'
         }
         default: {
