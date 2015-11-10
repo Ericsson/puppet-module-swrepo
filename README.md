@@ -9,12 +9,13 @@ Puppet module for managing software repositories (yum, zypper, apt)
 
 # Compatibility
 ---------------
-This module is built for use with Puppet v3 on the following OS families.
+This module is built for use with Puppet 3.x and 4.x on the following OS families:
 
 * EL 7
 * EL 6
 * EL 5
 * Suse 11
+* Suse 12
 
 This module uses the custom types [zypprepo](https://github.com/deadpoint/puppet-zypprepo) and [rpmkey](https://github.com/stschulte/puppet-rpmkey).
 
