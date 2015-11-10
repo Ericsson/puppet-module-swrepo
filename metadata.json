@@ -1,6 +1,6 @@
 {
   "name": "jwennerberg-swrepo",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": "jwennerberg",
   "summary": "Manage software repositories",
   "license": "Apache-2.0",
