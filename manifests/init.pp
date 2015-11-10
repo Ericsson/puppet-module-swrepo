@@ -43,7 +43,7 @@ class swrepo (
     repotype => $_repotype,
   }
 
-  if type($hiera_merge) == 'string' {
+  if type3x($hiera_merge) == 'string' {
     $hiera_merge_real = str2bool($hiera_merge)
   } else {
     $hiera_merge_real = $hiera_merge
