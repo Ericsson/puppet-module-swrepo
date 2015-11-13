@@ -22,6 +22,7 @@ describe 'swrepo::repo' do
 
     it {
       should contain_yumrepo('custom-repo').with({
+        'ensure'   => 'present',
         'name'     => 'custom-repo',
         'descr'    => 'custom-repo',
         'baseurl'  => 'http://yum.server.tld/Repo',
@@ -57,6 +58,7 @@ describe 'swrepo::repo' do
 
     it {
       should contain_yumrepo('custom-repo').with({
+        'ensure'   => 'present',
         'name'     => 'custom-repo',
         'descr'    => 'custom-repo',
         'baseurl'  => 'http://yum.server.tld/repo/SubDir',
@@ -99,6 +101,7 @@ describe 'swrepo::repo' do
 
     it {
       should contain_yumrepo('custom-repo').with({
+        'ensure'   => 'present',
         'name'     => 'custom-repo',
         'descr'    => 'custom-repo',
         'baseurl'  => 'http://yum.server.tld/repo/subdir',
@@ -109,6 +112,29 @@ describe 'swrepo::repo' do
         'exclude'  => 'kernel-debug',
         'proxy'    => 'absent',
       })
+    }
+  end
+
+  context 'YUM repo with ensure = absent' do
+    let(:title) { 'custom-repo' }
+    let(:params) {
+      {
+        :ensure        => 'absent',
+        :repotype      => 'yum',
+        :baseurl       => 'http://yum.server.tld/repo/SubDir',
+        :gpgkey_keyid  => '1HEXHEX0',
+        :gpgkey_source => 'http://yum.server.tld/GPGKEY',
+      }
+    }
+    let(:facts) {
+      { :osfamily => 'RedHat', }
+    }
+
+    it {
+      should contain_yumrepo('custom-repo').with_ensure('absent')
+    }
+    it {
+      should contain_rpmkey('1HEXHEX0').with_ensure('absent')
     }
   end
 
@@ -230,4 +256,34 @@ describe 'swrepo::repo' do
       })
     }
   end
+
+  context "with invalid ensure attribute" do
+    let(:title) { 'custom-repo' }
+    let(:params) {{
+      :ensure   => 'stopped',
+      :repotype => 'yum',
+      :baseurl  => 'http://yum.server.tld/Repo',
+    }}
+
+    it 'should fail' do
+      expect {
+        should contain_yumrepo('custom-repo')
+      }.to raise_error(Puppet::Error,/ensure must be either present or absent/)
+    end
+  end
+
+  context "with invalid repotype attribute" do
+    let(:title) { 'custom-repo' }
+    let(:params) {{
+      :repotype => 'rpm',
+      :baseurl  => 'http://yum.server.tld/Repo',
+    }}
+
+    it 'should fail' do
+      expect {
+        should contain_define('swrepo::repo')
+      }.to raise_error(Puppet::Error,/Invalid repotype rpm. Supported repotypes are yum, zypper and apt/)
+    end
+  end
+
 end

@@ -5,6 +5,7 @@
 define swrepo::repo (
   $repotype,
   $baseurl,
+  $ensure           = 'present',
   $enabled          = '1',
   $autorefresh      = undef,
   $gpgcheck         = undef,
@@ -19,6 +20,8 @@ define swrepo::repo (
   $downcase_baseurl = false,
 ) {
 
+  validate_re($ensure, '^(present)|(absent)$', 'ensure must be either present or absent')
+
   if $downcase_baseurl {
     $baseurl_real = downcase($baseurl)
   } else {
@@ -28,6 +31,7 @@ define swrepo::repo (
   case $repotype {
     'yum': {
       yumrepo { $name:
+        ensure   => $ensure,
         baseurl  => $baseurl_real,
         descr    => $descr,
         enabled  => $enabled,
@@ -61,7 +65,7 @@ define swrepo::repo (
 
   if $repotype =~ /yum|zypper/ and ($gpgkey_source and $gpgkey_keyid) {
     rpmkey { $gpgkey_keyid:
-      ensure => present,
+      ensure => $ensure,
       source => $gpgkey_source,
     }
   }

@@ -50,6 +50,12 @@ Boolean to control merges of all found instances of repositories in Hiera. This 
 *Parameters*
 ------------
 
+ensure
+------
+Either 'present' or 'absent' Note: not supported for zypprepo
+
+- *Default*: 'present'
+
 repotype
 --------
 Type of repository to configure (yum, zypper, apt)
