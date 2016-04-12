@@ -48,7 +48,7 @@ module Puppet
   end
 
   # Doc string for properties that can be made 'absent'
-  ABSENT_DOC="Set this to `absent` to remove it from the file completely."
+  ABSENT_DOC ||= "Set this to `absent` to remove it from the file completely."
 
   newtype(:zypprepo) do
     @doc = "The client-side description of a zypper repository. Repository
