@@ -12,6 +12,7 @@ RSpec.configure do |config|
   end
   config.default_facts = {
     :osfamily    => 'RedHat',
+    :common      => nil,      # used in hiera tests
     :environment => 'rp_env',
   }
 end

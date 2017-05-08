@@ -1,0 +1,4 @@
+---
+swrepo::repos:
+  hiera-common:
+    baseurl: 'http://hiera.common/repo'
