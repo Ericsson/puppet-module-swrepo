@@ -26,9 +26,9 @@ This module uses the custom types [zypprepo](https://github.com/deadpoint/puppet
 
 repotype
 --------
-Type of repository to configure. Default value depending on OS (yum for RHEL and so on).
+Type of repository to configure. Default value depending on OS (yum for RHEL and zypper for Suse).
 
-- *Default*: 'USE_DEFAULT'
+- *Default*: undef
 
 repos
 -----
