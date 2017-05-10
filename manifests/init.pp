@@ -27,11 +27,7 @@ class swrepo (
     repotype => $repotype_real,
   }
 
-  if type3x($hiera_merge) == 'string' {
-    $hiera_merge_real = str2bool($hiera_merge)
-  } else {
-    $hiera_merge_real = $hiera_merge
-  }
+  $hiera_merge_real = str2bool($hiera_merge)
   validate_bool($hiera_merge_real)
 
   if $repos != undef {

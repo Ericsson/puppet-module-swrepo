@@ -130,7 +130,7 @@ describe 'swrepo' do
         :name    => %w[hiera_merge],
         :valid   => [true, false, 'true', 'false'],
         :invalid => ['string', %w[array], { 'ha' => 'sh' }, 3, 2.42, nil],
-        :message => '(is not a boolean|Unknown type of boolean given)',
+        :message => 'str2bool',
       },
       'hash' => {
         :name    => %w[repos],
