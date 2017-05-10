@@ -255,14 +255,15 @@ describe 'swrepo::repo' do
   end # %w[yum zypper].each do |repotype|
 
   # RPM Key handling
-  # /!\ should fail hard when gpgkey_keyid or gpgkey_source is missing
   describe 'with gpgkey_keyid set to valid string 0608B895' do
     let(:params) {
       mandatory_params.merge({
         :gpgkey_keyid => '0608B895',
       })
     }
-    it { should have_rpmkey_resource_count(0) }
+    it 'should fail' do
+      expect { should contain_class(subject) }.to raise_error(Puppet::Error, /swrepo::repo::gpgkey_keyid is specified but swrepo::repo::gpgkey_source is missing/)
+    end
   end
 
   describe 'with gpgkey_source set to valid string http://url.to/gpgkey' do

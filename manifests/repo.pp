@@ -59,10 +59,16 @@ define swrepo::repo (
     }
   }
 
+  if $gpgkey_keyid != undef and $gpgkey_source == undef {
+      fail('swrepo::repo::gpgkey_keyid is specified but swrepo::repo::gpgkey_source is missing.')
+  }
+
   if $repotype =~ /yum|zypper/ and ($gpgkey_source and $gpgkey_keyid) {
     rpmkey { $gpgkey_keyid:
       ensure => present,
       source => $gpgkey_source,
     }
   }
+
+
 }
