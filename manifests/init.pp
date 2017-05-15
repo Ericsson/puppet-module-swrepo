@@ -3,51 +3,31 @@
 # Module to manage swrepo
 #
 class swrepo (
-  $repotype     = 'USE_DEFAULT',
+  $repotype     = undef,
   $repos        = undef,
   $hiera_merge  = false,
 ) {
 
   case $::osfamily {
-    'RedHat': {
-      $default_repotype = 'yum'
-    }
-    'Suse': {
-      case $::lsbmajdistrelease {
-        '10': {
-          fail('Suse 10 not yet supported')
-        }
-        '11','12': {
-          $default_repotype = 'zypper'
-        }
-        default: {
-          fail("Unsupported Suse version ${::lsbmajdistrelease}")
-        }
+    'RedHat': { $repotype_default = 'yum' }
+    'Suse':   { case $::lsbmajdistrelease {
+      '11','12': { $repotype_default = 'zypper' }
+      default:   { fail("Unsupported Suse version ${::lsbmajdistrelease}") }
       }
     }
-    'Debian': {
-      fail('Debian not yet supported')
-    }
-    default: {
-      fail("Supported osfamilies are RedHat, Suse and Debian. Yours identified as <${::osfamily}>")
-    }
+    default:  { fail("Supported osfamilies are RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::lsbmajdistrelease}>") }
   }
 
-  if $repotype == 'USE_DEFAULT' {
-    $_repotype = $default_repotype
-  } else {
-    $_repotype = $repotype
+  $repotype_real = $repotype ? {
+    undef   => $repotype_default,
+    default => $repotype,
   }
 
   $defaults = {
-    repotype => $_repotype,
+    repotype => $repotype_real,
   }
 
-  if type3x($hiera_merge) == 'string' {
-    $hiera_merge_real = str2bool($hiera_merge)
-  } else {
-    $hiera_merge_real = $hiera_merge
-  }
+  $hiera_merge_real = str2bool($hiera_merge)
   validate_bool($hiera_merge_real)
 
   if $repos != undef {

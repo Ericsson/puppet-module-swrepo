@@ -1,0 +1,4 @@
+---
+swrepo::repos:
+  hiera-fqdn:
+    baseurl: 'http://hiera.fqdn/repo'
