@@ -128,7 +128,7 @@ describe 'swrepo' do
     validations = {
       'boolean' => {
         :name    => %w[hiera_merge],
-        :valid   => [true, false, 'true', 'false'],
+        :valid   => [true, 'false'],
         :invalid => ['string', %w[array], { 'ha' => 'sh' }, 3, 2.42, nil],
         :message => 'str2bool',
       },
@@ -141,7 +141,7 @@ describe 'swrepo' do
       'string' => {
         :name    => %w[repotype],
         :valid   => %w[string],
-        :invalid => [], # no type validation yet, should fail on [%w[array], { 'ha' => 'sh' }, 3, 2.42, true],
+        :invalid => [%w[array], { 'ha' => 'sh' }, 3, 2.42, true],
         :message => 'is not a string',
       },
     }

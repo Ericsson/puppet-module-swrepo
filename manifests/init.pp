@@ -8,11 +8,16 @@ class swrepo (
   $hiera_merge  = false,
 ) {
 
+  $hiera_merge_real = str2bool($hiera_merge)
+  validate_bool($hiera_merge_real)
+  if is_string($repotype) == false { fail('swrepo::repotype is not a string') }
+
   case $::osfamily {
     'RedHat': { $repotype_default = 'yum' }
-    'Suse':   { case $::lsbmajdistrelease {
-      '11','12': { $repotype_default = 'zypper' }
-      default:   { fail("Unsupported Suse version ${::lsbmajdistrelease}") }
+    'Suse':   {
+      case $::lsbmajdistrelease {
+        '11','12': { $repotype_default = 'zypper' }
+        default:   { fail("Unsupported Suse version ${::lsbmajdistrelease}") }
       }
     }
     default:  { fail("Supported osfamilies are RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::lsbmajdistrelease}>") }
@@ -26,9 +31,6 @@ class swrepo (
   $defaults = {
     repotype => $repotype_real,
   }
-
-  $hiera_merge_real = str2bool($hiera_merge)
-  validate_bool($hiera_merge_real)
 
   if $repos != undef {
     if $hiera_merge_real == true {

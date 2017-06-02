@@ -111,6 +111,20 @@ describe 'swrepo::repo' do
         end
       end
 
+      context 'when enabled is set to valid boolean false' do
+        let(:params) {
+          mandatory_params.merge({
+            :enabled  => false,
+            :repotype => repotype,
+          })
+        }
+        if repotype == 'yum'
+          it { should contain_yumrepo('spectest-repo').with_enabled('0') }
+        else
+          it { should contain_zypprepo('spectest-repo').with_enabled('0') }
+        end
+      end
+
       context 'when enabled is set to valid string 0' do
         let(:params) {
           mandatory_params.merge({
@@ -125,6 +139,20 @@ describe 'swrepo::repo' do
         end
       end
 
+      context 'when autorefresh is set to valid boolean true' do
+        let(:params) {
+          mandatory_params.merge({
+            :autorefresh  => true,
+            :repotype     => repotype,
+          })
+        }
+        if repotype == 'yum'
+          it { should contain_yumrepo('spectest-repo').without_autorefresh }
+        else
+          it { should contain_zypprepo('spectest-repo').with_autorefresh('1') }
+        end
+      end
+
       context 'when autorefresh is set to valid string 1' do
         let(:params) {
           mandatory_params.merge({
@@ -136,6 +164,20 @@ describe 'swrepo::repo' do
           it { should contain_yumrepo('spectest-repo').without_autorefresh }
         else
           it { should contain_zypprepo('spectest-repo').with_autorefresh('1') }
+        end
+      end
+
+      context 'when gpgcheck is set to valid boolean true' do
+        let(:params) {
+          mandatory_params.merge({
+            :gpgcheck => true,
+            :repotype => repotype,
+          })
+        }
+        if repotype == 'yum'
+          it { should contain_yumrepo('spectest-repo').with_gpgcheck('1') }
+        else
+          it { should contain_zypprepo('spectest-repo').with_gpgcheck('1') }
         end
       end
 
@@ -167,6 +209,20 @@ describe 'swrepo::repo' do
         end
       end
 
+      context 'when priority is set to valid integer 42' do
+        let(:params) {
+          mandatory_params.merge({
+            :priority => 42,
+            :repotype => repotype,
+          })
+        }
+        if repotype == 'yum'
+          it { should contain_yumrepo('spectest-repo').with_priority('42') }
+        else
+          it { should contain_zypprepo('spectest-repo').with_priority('42') }
+        end
+      end
+
       context 'when priority is set to valid string 42' do
         let(:params) {
           mandatory_params.merge({
@@ -178,6 +234,20 @@ describe 'swrepo::repo' do
           it { should contain_yumrepo('spectest-repo').with_priority('42') }
         else
           it { should contain_zypprepo('spectest-repo').with_priority('42') }
+        end
+      end
+
+      context 'when keeppackages is set to valid boolean true' do
+        let(:params) {
+          mandatory_params.merge({
+            :keeppackages => true,
+            :repotype     => repotype,
+          })
+        }
+        if repotype == 'yum'
+          it { should contain_yumrepo('spectest-repo').without_keeppackages }
+        else
+          it { should contain_zypprepo('spectest-repo').with_keeppackages('1') }
         end
       end
 
@@ -195,17 +265,17 @@ describe 'swrepo::repo' do
         end
       end
 
-      context 'when type is set to valid string 1' do
+      context 'when type is set to valid string yum' do
         let(:params) {
           mandatory_params.merge({
-            :type     => '1',
+            :type     => 'yum',
             :repotype => repotype,
           })
         }
         if repotype == 'yum'
           it { should contain_yumrepo('spectest-repo').without_type }
         else
-          it { should contain_zypprepo('spectest-repo').with_type('1') }
+          it { should contain_zypprepo('spectest-repo').with_type('yum') }
         end
       end
 
@@ -290,4 +360,74 @@ describe 'swrepo::repo' do
       })
     end
   end
+
+  describe 'variable type and content validations' do
+    validations = {
+      'boolean & stringified bools' => {
+        :name    => %w[autorefresh downcase_baseurl enabled gpgcheck keeppackages],
+        :valid   => [true, 'false', '1', 0], # support for stringified booleans is for backward compatibility only
+        :invalid => ['string', %w[array], { 'ha' => 'sh' }, 3, 2.42, nil],
+        :message => '(is not a boolean|str2bool)',
+      },
+      'integer 1..99' => {
+        :name    => %w(priority),
+        :valid   => [1,'99'],
+        :invalid => [0, 100, 'string', %w(array), { 'ha' => 'sh' }, 2.42, true, nil],
+        :message => '(is not an integer|is not a number|validate_integer)',
+      },
+      'regex for URLs' => {
+        :name    => %w[baseurl gpgkey_source proxy],
+        :valid   => %w[http://spec.test/repo https://te.st/ing/],
+        :invalid => [%w[array], { 'ha' => 'sh' }, 3, 2.42, true, nil],
+        :message => '(is not a string|is not an URL)',
+      },
+      'regex for repotype' => {
+        :name    => %w[repotype],
+        :valid   => %w[apt yum zypper],
+        :invalid => ['string', %w[array], { 'ha' => 'sh' }, 3, 2.42, true, nil],
+        :message => '(is not a string|repotype is invalid)',
+      },
+      'regex for type' => {
+        :name    => %w[type],
+        :valid   => %w[yum yast2 rpm-md plaindir],
+        :invalid => ['string', %w[array], { 'ha' => 'sh' }, 3, 2.42, true, nil],
+        :message => '(is not a string|type is invalid)',
+      },
+      'string' => {
+        :name    => %w[descr exclude],
+        :valid   => ['string', nil],
+        :invalid => [%w[array], { 'ha' => 'sh' }, 3, 2.42, true],
+        :message => 'is not a string',
+      },
+      'string' => {
+        :name    => %w[gpgkey_keyid],
+        :params  => { :gpgkey_source => 'http://spec.test/repo' }, # mandatory for gpgkey_keyid usage
+        :valid   => %w[DEADC0DE],
+        :invalid => [%w[array], { 'ha' => 'sh' }, 3, 2.42, true],
+        :message => 'is not a string',
+      },
+    }
+
+    validations.sort.each do |type, var|
+      var[:name].each do |var_name|
+        var[:params] = {} if var[:params].nil?
+        var[:valid].each do |valid|
+          context "when #{var_name} (#{type}) is set to valid #{valid} (as #{valid.class})" do
+            let(:params) { [mandatory_params, var[:params], { :"#{var_name}" => valid, }].reduce(:merge) }
+            it { should compile }
+          end
+        end
+
+        var[:invalid].each do |invalid|
+          context "when #{var_name} (#{type}) is set to invalid #{invalid} (as #{invalid.class})" do
+            let(:params) { [mandatory_params, var[:params], { :"#{var_name}" => invalid, }].reduce(:merge) }
+            it 'should fail' do
+              expect { should contain_class(subject) }.to raise_error(Puppet::Error, /#{var[:message]}/)
+            end
+          end
+        end
+      end # var[:name].each
+    end # validations.sort.each
+  end # describe 'variable type and content validations'
+
 end
