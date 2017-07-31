@@ -1,128 +1,129 @@
 require 'spec_helper'
 describe 'swrepo' do
-  os_defaults_matrix = {
-    'Debian'  => { :os => 'Debian',  :lsbmajdist => nil,  :repotype => nil },
-    'RedHat'  => { :os => 'RedHat',  :lsbmajdist => nil,  :repotype => 'yum' },
-    'Suse-10' => { :os => 'Suse',    :lsbmajdist => '10', :repotype => nil },
+
+  supported_os_families = {
+    'RedHat'  => { :os => 'RedHat',  :lsbmajdist => '7',  :repotype => 'yum' },
     'Suse-11' => { :os => 'Suse',    :lsbmajdist => '11', :repotype => 'zypper' },
     'Suse-12' => { :os => 'Suse',    :lsbmajdist => '12', :repotype => 'zypper' },
-    'Unknown' => { :os => 'Unknown', :lsbmajdist => nil,  :repotype => nil },
+  }
+
+  unsupported_os_families = {
+    'Suse-10' => { :os => 'Suse',    :lsbmajdist => '10', :repotype => nil },
+    'Unknown' => { :os => 'Unknown', :lsbmajdist => '3',  :repotype => nil },
   }
 
   repos_hash = {
-    :repos => {
-      'testhash' => {
-        'baseurl' => 'http://spec.test/repo',
-      }
-    }
+    'params-hash1' => { 'baseurl' => 'http://params.hash/repo1' },
+    'params-hash2' => { 'baseurl' => 'http://params.hash/repo2' },
   }
 
-  os_defaults_matrix.sort.each do |os, facts|
-    describe "when running on #{os} osfamily" do
+  # ensure that the class is passive by default
+  describe 'when all parameters are unset (unsing module defaults)' do
+    it { should compile.with_all_deps }
+    it { should contain_class('swrepo') }
+    it { should have_resource_count(0) }
+  end
+
+  # ensure repotype can be set freely on any supported os
+  %w(yum zypper).each do | repotype|
+    describe "when repotype is set to the valid string #{repotype}" do
+      let(:params) { { :repotype => repotype } }
+      it { should have_swrepo__repo_resource_count(0) }
+
+      supported_os_families.sort.each do |os, facts|
+        context "with repos set to a valid hash on supported #{os}" do
+          let(:facts) do
+            {
+              :osfamily          => facts[:os],
+              :lsbmajdistrelease => facts[:lsbmajdist],
+            }
+            end
+          let(:params) { { :repos => repos_hash}.merge({ :repotype => repotype }) }
+          it { should have_swrepo__repo_resource_count(2) }
+          it { should contain_swrepo__repo('params-hash1').with_repotype(repotype) }
+          it { should contain_swrepo__repo('params-hash2').with_repotype(repotype) }
+        end
+      end
+    end
+  end
+
+  # ensure repos hash is creating resources
+  # ensure repotype will be set automatically
+  supported_os_families.sort.each do |os, facts|
+    describe "when repos is set to a valid hash on supported #{os}" do
       let(:facts) do
         {
           :osfamily          => facts[:os],
           :lsbmajdistrelease => facts[:lsbmajdist],
         }
       end
-
-      context 'with default values for all parameters' do
-        if facts[:repotype] != nil
-          it { should compile.with_all_deps }
-          it { should contain_class('swrepo') }
-          it { should have_swrepo__repo_resource_count(0) }
-        else
-          it 'should fail' do
-            expect { should contain_class(subject) }.to raise_error(Puppet::Error, /(not yet supported|Unsupported Suse version|Supported osfamilies are)/)
-          end
-        end
-      end
-
-      context 'when repos is set to a valid hash' do
-        let(:params) { repos_hash }
-        if facts[:repotype] != nil
-          it { should have_swrepo__repo_resource_count(1) }
-          it do
-            should contain_swrepo__repo('testhash').with({
-              'baseurl'  => 'http://spec.test/repo',
-              'repotype' => facts[:repotype]
-            })
-          end
-        end
-      end
+      let(:params) { { :repos => repos_hash } }
+      it { should have_swrepo__repo_resource_count(2) }
+      it { should contain_swrepo__repo('params-hash1').with_repotype(facts[:repotype]) }
+      it { should contain_swrepo__repo('params-hash2').with_repotype(facts[:repotype]) }
     end
   end
 
-  describe 'when repotype is set to valid string apt' do
-    let(:params) { repos_hash.merge({ :repotype => 'apt' }) }
-    it { should contain_swrepo__repo('testhash').with_repotype('apt') }
-  end
 
-  describe 'when repos is set to a valid hash' do
-    let(:facts) do
-      {
-        :osfamily => 'RedHat',
-        :fqdn     => 'swrepo.example.local', # set fqdn to include hiera data
-      }
-    end
-
-    context 'with hiera_merge set to boolean true' do
-      let(:params) { repos_hash.merge({ :hiera_merge => true }) }
-      it { should have_swrepo__repo_resource_count(1) }
-      it { should contain_swrepo__repo('hiera-fqdn').with_baseurl('http://hiera.fqdn/repo') }
-    end
-
-    context 'with hiera_merge set to boolean false' do
-      let(:params) { repos_hash.merge({ :hiera_merge => false }) }
-      it { should have_swrepo__repo_resource_count(1) }
-      it { should contain_swrepo__repo('testhash').with_baseurl('http://spec.test/repo') }
-    end
-  end
-
-  describe 'when hiera_merge is set to boolean true' do
-    let(:facts) do
-      {
-        :osfamily => 'RedHat',
-        :fqdn     => 'swrepo.example.local', # set fqdn to include hiera data
-      }
-    end
-
-    context 'with repos set to a valid hash' do
-      let(:params) { repos_hash.merge({ :hiera_merge => true }) }
-      it { should have_swrepo__repo_resource_count(1) }
-      it { should contain_swrepo__repo('hiera-fqdn').with_baseurl('http://hiera.fqdn/repo') }
-    end
-
-    context 'with repos unset' do
-      let(:params) { { :hiera_merge => true, :repos => nil } }
-      it { should have_swrepo__repo_resource_count(1) }
-      it { should contain_swrepo__repo('hiera-fqdn').with_baseurl('http://hiera.fqdn/repo') }
-    end
-  end
-
+  # ensure hiera merging works as intended
   describe 'with hiera providing data from multiple levels' do
     let(:facts) do
       {
-        :osfamily => 'RedHat',
         :fqdn     => 'swrepo.example.local',
         :common   => 'common',
       }
     end
 
-    context 'with hiera_merge set to boolean false' do
-      let(:params) { { :hiera_merge => false } }
-      it { should have_swrepo__repo_resource_count(1) }
-      it { should contain_swrepo__repo('hiera-fqdn').with_baseurl('http://hiera.fqdn/repo') }
+    context 'when repos is unset' do
+      context 'with hiera_merge set to boolean false' do
+        let(:params) { { :hiera_merge => false } }
+        it { should have_swrepo__repo_resource_count(1) }
+        it { should contain_swrepo__repo('hiera-fqdn').with_baseurl('http://hiera.fqdn/repo') }
+      end
+
+      context 'with hiera_merge set to boolean true' do
+        let(:params) { { :hiera_merge => true } }
+        it { should have_swrepo__repo_resource_count(2) }
+        it { should contain_swrepo__repo('hiera-common').with_baseurl('http://hiera.common/repo') }
+        it { should contain_swrepo__repo('hiera-fqdn').with_baseurl('http://hiera.fqdn/repo') }
+      end
     end
 
-    context 'with hiera_merge set to boolean true' do
-      let(:params) { { :hiera_merge => true } }
-      it { should have_swrepo__repo_resource_count(2) }
-      it { should contain_swrepo__repo('hiera-common').with_baseurl('http://hiera.common/repo') }
-      it { should contain_swrepo__repo('hiera-fqdn').with_baseurl('http://hiera.fqdn/repo') }
+    context 'when repos is set to a valid hash' do
+      context 'with hiera_merge set to boolean false' do
+        let(:params) { { :repos => repos_hash}.merge({ :hiera_merge => false }) }
+        it { should have_swrepo__repo_resource_count(2) }
+        it { should contain_swrepo__repo('params-hash1').with_baseurl('http://params.hash/repo1') }
+        it { should contain_swrepo__repo('params-hash2').with_baseurl('http://params.hash/repo2') }
+      end
+
+      context 'with hiera_merge set to boolean true' do
+        let(:params) { { :repos => repos_hash}.merge({ :hiera_merge => true }) }
+        it { should have_swrepo__repo_resource_count(2) }
+        it { should_not contain_swrepo__repo('params-hash1') }
+        it { should_not contain_swrepo__repo('params-hash2') }
+        it { should contain_swrepo__repo('hiera-common').with_baseurl('http://hiera.common/repo') }
+        it { should contain_swrepo__repo('hiera-fqdn').with_baseurl('http://hiera.fqdn/repo') }
+      end
     end
   end
 
+  # ensure it fails on unsupported os
+  unsupported_os_families.sort.each do |os, facts|
+    describe "when running on unsupported #{os}" do
+      let(:facts) do
+        {
+          :osfamily          => facts[:os],
+          :lsbmajdistrelease => facts[:lsbmajdist],
+        }
+      end
+      it 'should fail' do
+        expect { should contain_class(subject) }.to raise_error(Puppet::Error, %r{Supported osfamilies are RedHat and Suse 11/12})
+      end
+    end
+  end
+
+  # ensure parameters only takes intended data types
   describe 'variable type and content validations' do
     mandatory_params = {}
     validations = {
@@ -134,7 +135,7 @@ describe 'swrepo' do
       },
       'hash' => {
         :name    => %w[repos],
-        :valid   => [], # valid hashes are to complex to block test them here.
+        :valid   => [repos_hash], # valid hashes are to complex to block test them here.
         :invalid => ['string', %w[array], 3, 2.42, true],
         :message => 'is not a Hash',
       },

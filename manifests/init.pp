@@ -17,7 +17,7 @@ class swrepo (
     'Suse':   {
       case $::lsbmajdistrelease {
         '11','12': { $repotype_default = 'zypper' }
-        default:   { fail("Unsupported Suse version ${::lsbmajdistrelease}") }
+        default:   { fail("Supported osfamilies are RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::lsbmajdistrelease}>") }
       }
     }
     default:  { fail("Supported osfamilies are RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::lsbmajdistrelease}>") }
