@@ -3,7 +3,7 @@
 
 [![Build Status](https://travis-ci.org/jwennerberg/puppet-module-swrepo.png?branch=master)](https://travis-ci.org/jwennerberg/puppet-module-swrepo)
 
-Puppet module for managing software repositories (yum, zypper, apt)
+Puppet module for managing software repositories (yum, zypper)
 
 ===
 
@@ -52,7 +52,7 @@ Boolean to control merges of all found instances of repositories in Hiera. This 
 
 repotype
 --------
-Type of repository to configure (yum, zypper, apt)
+Type of repository to configure (yum, zypper)
 
 - *Default*: N/A
 

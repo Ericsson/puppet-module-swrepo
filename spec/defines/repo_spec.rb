@@ -303,7 +303,7 @@ describe 'swrepo::repo' do
       },
       'regex for repotype' => {
         :name    => %w[repotype],
-        :valid   => %w[apt yum zypper],
+        :valid   => %w[yum zypper],
         :invalid => ['string', %w[array], { 'ha' => 'sh' }, 3, 2.42, true, nil],
         :message => '(is not a string|repotype is invalid)',
       },

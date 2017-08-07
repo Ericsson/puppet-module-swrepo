@@ -24,7 +24,7 @@ define swrepo::repo (
   validate_re($baseurl,  '^https?:\/\/[\S]+$', 'swrepo::repo::baseurl is not an URL.')
 
   if is_string($repotype) == false { fail('swrepo::repo::repotype is not a string.') }
-  validate_re($repotype, '^(yum|zypper|apt)$', 'swrepo::repo::repotype is invalid. Supported values are yum, apt, and zypper.')
+  validate_re($repotype, '^(yum|zypper)$', 'swrepo::repo::repotype is invalid. Supported values are yum and zypper.')
 
   if $autorefresh == undef {
     $autorefresh_num = undef
@@ -113,9 +113,6 @@ define swrepo::repo (
         type         => $type,
         autorefresh  => $autorefresh_num,
       }
-    }
-    'apt': {
-      notice('apt support coming')
     }
     default: {
       fail("Invalid repotype ${repotype}. Supported repotypes are yum, zypper and apt.")
