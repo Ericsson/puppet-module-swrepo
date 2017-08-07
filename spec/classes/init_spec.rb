@@ -2,14 +2,14 @@ require 'spec_helper'
 describe 'swrepo' do
 
   supported_os_families = {
-    'RedHat'  => { :os => 'RedHat',  :lsbmajdist => '7',  :repotype => 'yum' },
-    'Suse-11' => { :os => 'Suse',    :lsbmajdist => '11', :repotype => 'zypper' },
-    'Suse-12' => { :os => 'Suse',    :lsbmajdist => '12', :repotype => 'zypper' },
+    'RedHat'  => { :os => 'RedHat',  :osrelease => '7.4',  :repotype => 'yum' },
+    'Suse-11' => { :os => 'Suse',    :osrelease => '11.1', :repotype => 'zypper' },
+    'Suse-12' => { :os => 'Suse',    :osrelease => '12.2', :repotype => 'zypper' },
   }
 
   unsupported_os_families = {
-    'Suse-10' => { :os => 'Suse',    :lsbmajdist => '10', :repotype => nil },
-    'Unknown' => { :os => 'Unknown', :lsbmajdist => '3',  :repotype => nil },
+    'Suse-10' => { :os => 'Suse',    :osrelease => '10.0', :repotype => nil },
+    'Unknown' => { :os => 'Unknown', :osrelease => '2.42', :repotype => nil },
   }
 
   repos_hash = {
@@ -34,8 +34,8 @@ describe 'swrepo' do
         context "with repos set to a valid hash on supported #{os}" do
           let(:facts) do
             {
-              :osfamily          => facts[:os],
-              :lsbmajdistrelease => facts[:lsbmajdist],
+              :osfamily               => facts[:os],
+              :operatingsystemrelease => facts[:osrelease],
             }
             end
           let(:params) { { :repos => repos_hash}.merge({ :repotype => repotype }) }
@@ -53,8 +53,8 @@ describe 'swrepo' do
     describe "when repos is set to a valid hash on supported #{os}" do
       let(:facts) do
         {
-          :osfamily          => facts[:os],
-          :lsbmajdistrelease => facts[:lsbmajdist],
+          :osfamily               => facts[:os],
+          :operatingsystemrelease => facts[:osrelease],
         }
       end
       let(:params) { { :repos => repos_hash } }
@@ -113,8 +113,8 @@ describe 'swrepo' do
     describe "when running on unsupported #{os}" do
       let(:facts) do
         {
-          :osfamily          => facts[:os],
-          :lsbmajdistrelease => facts[:lsbmajdist],
+          :osfamily               => facts[:os],
+          :operatingsystemrelease => facts[:osrelease],
         }
       end
       it 'should fail' do

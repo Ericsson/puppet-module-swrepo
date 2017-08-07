@@ -15,12 +15,12 @@ class swrepo (
   case $::osfamily {
     'RedHat': { $repotype_default = 'yum' }
     'Suse':   {
-      case $::lsbmajdistrelease {
-        '11','12': { $repotype_default = 'zypper' }
-        default:   { fail("Supported osfamilies are RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::lsbmajdistrelease}>") }
+      case $::operatingsystemrelease {
+        /^(11|12)\./: { $repotype_default = 'zypper' }
+        default:      { fail("Supported osfamilies are RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::operatingsystemrelease}>") }
       }
     }
-    default:  { fail("Supported osfamilies are RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::lsbmajdistrelease}>") }
+    default:  { fail("Supported osfamilies are RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::operatingsystemrelease}>") }
   }
 
   $repotype_real = $repotype ? {
