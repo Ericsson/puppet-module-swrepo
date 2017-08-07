@@ -1,15 +1,25 @@
 # puppet-module-swrepo
-===
 
 [![Build Status](https://travis-ci.org/jwennerberg/puppet-module-swrepo.png?branch=master)](https://travis-ci.org/jwennerberg/puppet-module-swrepo)
 
-Puppet module for managing software repositories (yum, zypper)
+#### Table of Contents
 
-===
+1. [Module Description](#module-description)
+2. [Compatibility](#compatibility)
+3. [Class Descriptions](#class-descriptions)
+    * [swrepo](#class-swrepo)
+4. [Define Descriptions](#define-descriptions)
+    * [swrepo::repo](#defined-type-swreporepo)
+5. [Changelog](#changelog)
+
+# Module description
+
+Managing software repositories (yum, zypper)
 
 # Compatibility
----------------
-This module is built for use with Puppet 3.x and 4.x on the following OS families:
+This module has been tested to work on the following systems with Puppet v3
+(with and without the future parser) and Puppet v4 (with strict variables)
+using Ruby versions 1.8.7 (Puppet v3 only), 1.9.3, 2.0.0, 2.1.0 and 2.3.1.
 
 * EL 7
 * EL 6
@@ -19,118 +29,154 @@ This module is built for use with Puppet 3.x and 4.x on the following OS familie
 
 This module uses the custom types [zypprepo](https://github.com/deadpoint/puppet-zypprepo) and [rpmkey](https://github.com/stschulte/puppet-rpmkey).
 
-===
+# Class Descriptions
+## Class `swrepo`
+### Description
+The `swrepo` class is used to prepare and pass data to the `swrepo::repo` define.
+The module will stay passive when no repositories are specified to it.
 
-# Class parameters
-------------------
+It will set the repository type (yum or zypper) accordingly to the OS family running on.
+It will also allow you to merge hiera data through all levels. This is useful for specifying
+repositories at different levels of the hierarchy and having them all included in the catalog.
 
-repotype
---------
-Type of repository to configure. Default value depending on OS (yum for RHEL and zypper for Suse).
+### Parameters
 
-- *Default*: undef
+---
+#### repotype (string / optional)
+Type of repository type to configure. Valid values are 'yum' and 'zypper'.
+If not specified (undef) it will set the repotype accordingly to the running OS family.
 
-repos
------
-Hash of repositories to configure.
+- Default: ***undef*** (uses 'yum' for RHEL and 'zypper' for Suse)
 
-- *Default*: undef
+---
+#### repos (hash / optional)
+Hash of repositories to configure. This hash will be passed to [swrepo::repo](#defined-type-swreporepo) define via create_resources.
 
-hiera_merge
------------
-Boolean to control merges of all found instances of repositories in Hiera. This is useful for specifying repositories resources at different levels of the hierarchy and having them all included in the catalog.
+- Default: ***undef***
 
-- *Default*: false
+##### Example:
+```yaml
+swrepo::repos:
+  'repo1':
+    baseurl: 'http://params.hash/repo1'
+  'repo2':
+    baseurl:     'http://params.hash/repo2'
+    autorefresh: true
+    priority:    42
+```
+*The above will add two repositories: repo1 with defaults and repo2 with autorefresh and priority parameters changed.*
 
-===
+---
+#### hiera_merge (boolean / optional)
+Trigger to control merges of all found instances of repositories in Hiera. This is useful for specifying repositories resources at different levels of the hierarchy and having them all included in the catalog.
 
-# Define swrepo::repo
----------------------
+- Default: ***false***
+---
 
-*Parameters*
-------------
+# Define Descriptions
+## Defined type `swrepo::repo`
+### Description
 
-repotype
---------
-Type of repository to configure (yum, zypper)
+The `swrepo::repo` definition is used to configure repositories.
 
-- *Default*: N/A
+You can also specify `swrepo::repos` from hiera as a hash of repositories and they will be created by the base class using create_resources.
 
-baseurl
--------
-URL  to the directory where the yum repository 'repodata' directory lives.
+### Parameters
 
-- *Default*: N/A
+---
+#### baseurl (string / mandatory)
+Specify the base URL for the repository.
 
-enabled
--------
-Either '1' or '0'. This tells yum whether or not use this repository.
+- Default: ***N/A***
 
-- *Default*: '1'
+---
+#### repotype (string / mandatory)
+Specify the type of repository to configure. Valid values are 'yum' and 'zypper'.
 
-autorefresh
------------
-Note: Suse only
+- Default: ***N/A***
 
-- *Default*: undef
+---
+#### autorefresh (boolean / optional)
+Specify if autorefresh will be used.
 
-gpgcheck
---------
-Either '1' or '0'. This tells yum whether or not it should perform a GPG signature check on the packages gotten from this repository.
+**Hint**: only used for zypper, ignored on yum
 
-- *Default*: undef
+- Default: ***undef***
 
-gpgkey_source
--------------
-URL pointing to the ASCII-armored GPG key file for the repository.
-
-- *Default*: undef
-
-gpgkey_keyid
-------------
-KeyID for the GPG key to import. 8 char hex key in uppercase.
-
-- *Default*: undef
-
-priority
---------
-Priority of this repository from 1-99. Requires that the priorities plugin is installed and enabled.
-
-- *Default*: undef
-
-keeppackages
-------------
-Note: Suse only.
-
-- *Default*: undef
-
-type
-----
-Note: Suse only.
-
-- *Default*: undef
-
-descr
------
+---
+#### descr (string / optional)
 A human-readable description of the repository.
 
-- *Default*: undef
+- Default: ***undef***
 
-exclude
--------
-List of shell globs. Matching packages will never be considered in updates or installs for this repo.
+---
+#### downcase_baseurl (boolean / optional)
+Trigger if $baseurl should be converted to lowercase characters.
 
-- *Default*: undef
+- Default: ***false***
 
-proxy
------
-URL to the proxy server that yum should use.
+---
+#### enabled (boolean / optional)
+Specify if the repository will be used.
 
-- *Default*: undef
+- Default: ***true***
 
-downcase_baseurl
-----------------
-Boolean to control whether or not `baseurl` should be converted to lowercase.
+---
+#### exclude (string / optional)
+List of shell globs. Matching packages will never be considered in updates or installs for the repository.
 
-- *Default*: false
+- Default: ***undef***
 
+---
+#### gpgcheck (boolean / optional)
+Specify if GPG signature checking will be used for packages from this repository.
+
+- Default: ***undef***
+
+---
+#### gpgkey_keyid (string / optional)
+KeyID for the GPG key to import. 8 char hex key in uppercase. When $gpgkey_source is not specified too, the module will fail.
+
+- Default: ***undef***
+
+---
+#### gpgkey_source (string / optional)
+URL pointing to the ASCII-armored GPG key file for the repository. When $gpgkey_keyid is not specified too, this will be ignored silently.
+
+- Default: ***undef***
+
+---
+#### keeppackages (boolean / optional)
+Specify if keeppackages will be used.
+
+**Hint**: only used for zypper, ignored on yum
+
+- Default: ***undef***
+
+---
+#### priority (integer / optional)
+Priority of this repository from 1-99. Requires that the priorities plugin is installed and enabled.
+
+- Default: ***undef***
+
+---
+#### proxy (string / optional)
+URL to the proxy server that should be used.
+
+**Hint**: only used for yum, ignored on zypper
+
+- Default: ***undef***
+
+---
+#### type (string / optional)
+Specify the ```type``` parameter. Valid values are 'yum', 'yast2', 'rpm-md', and 'plaindir'.
+
+**Hint**: only used for zypper, ignored on yum
+
+- Default: ***undef***
+
+---
+
+# Changelog
+
+* 1.0.0 First stable release
