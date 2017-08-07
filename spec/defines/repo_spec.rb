@@ -7,6 +7,7 @@ describe 'swrepo::repo' do
   let(:title) { 'spectest-repo' }
   let(:params) { mandatory_params }
 
+  # ensure that the define fails without mandatory parameters specified
   describe 'with defaults for all parameters (mandatory parameters missing)' do
     let(:params) { {} }
     it 'should fail' do
@@ -14,80 +15,75 @@ describe 'swrepo::repo' do
     end
   end
 
-  describe 'with repotype specified (mandatory parameter incomplete)' do
-    let(:params) { { :repotype => 'yum' } }
-    it 'should fail' do
-      expect { should contain_class(subject) }.to raise_error(Puppet::Error, /(expects a value for|Must pass)/)
-    end
-  end
-
-  describe 'with baseurl specified (mandatory parameter incomplete)' do
+  describe 'with baseurl specified (mandatory parameters incomplete)' do
     let(:params) { { :baseurl  => 'http://spec.test/repo' } }
     it 'should fail' do
       expect { should contain_class(subject) }.to raise_error(Puppet::Error, /(expects a value for|Must pass)/)
     end
   end
 
-  describe 'with mandatory parameters specified' do
-    let(:params) { mandatory_params }
+  describe 'with repotype specified (mandatory parameters incomplete)' do
+    let(:params) { { :repotype => 'yum' } }
+    it 'should fail' do
+      expect { should contain_class(subject) }.to raise_error(Puppet::Error, /(expects a value for|Must pass)/)
+    end
+  end
 
-    it do
-      should contain_yumrepo('spectest-repo').with({
-        'name'     => 'spectest-repo',
-        'baseurl'  => 'http://spec.test/repo',
-        'descr'    => nil,
-        'enabled'  => '1',
-        'gpgcheck' => nil,
-        'gpgkey'   => nil,
-        'priority' => nil,
-        'exclude'  => nil,
-        'proxy'    => nil,
-      })
+  # ensure the default behavior on different repo types
+  describe 'with mandatory parameters specified' do
+    context' when repotype is set to yum' do
+      let(:params) { mandatory_params }
+
+      it do
+        should contain_yumrepo('spectest-repo').with({
+          'name'     => 'spectest-repo',
+          'baseurl'  => 'http://spec.test/repo',
+          'descr'    => nil,
+          'enabled'  => '1',
+          'gpgcheck' => nil,
+          'gpgkey'   => nil,
+          'priority' => nil,
+          'exclude'  => nil,
+          'proxy'    => nil,
+        })
+      end
+
+      it { should have_yumrepo_resource_count(1) }
+      it { should have_zypprepo_resource_count(0) }
+      it { should have_rpmkey_resource_count(0) }
     end
 
-    it { should have_yumrepo_resource_count(1) }
-    it { should have_zypprepo_resource_count(0) }
-    it { should have_rpmkey_resource_count(0) }
+    context' when repotype is set to zypper' do
+      let(:params) { mandatory_params.merge({ :repotype => 'zypper' }) }
+
+      it do
+        should contain_zypprepo('spectest-repo').with({
+          'name'          => 'spectest-repo',
+          'baseurl'       => 'http://spec.test/repo',
+          'descr'         => nil,
+          'enabled'       => '1',
+          'gpgcheck'      => nil,
+          'gpgkey'        => nil,
+          'priority'      => nil,
+          'keeppackages'  => nil,
+          'type'          => nil,
+          'autorefreash'  => nil,
+        })
+      end
+
+      it { should have_yumrepo_resource_count(0) }
+      it { should have_zypprepo_resource_count(1) }
+      it { should have_rpmkey_resource_count(0) }
+    end
   end
 
-  describe 'with repotype set to valid yum' do
-    let(:params) { mandatory_params.merge({ :repotype => 'yum' }) }
-
-    it { should contain_yumrepo('spectest-repo') }
-    it { should have_yumrepo_resource_count(1) }
-    it { should have_zypprepo_resource_count(0) }
-    it { should have_rpmkey_resource_count(0) }
-  end
-
-  describe 'with repotype set to valid zypper' do
-    let(:params) { mandatory_params.merge({ :repotype => 'zypper' }) }
-
-    it { should contain_zypprepo('spectest-repo') }
-    it { should have_yumrepo_resource_count(0) }
-    it { should have_zypprepo_resource_count(1) }
-    it { should have_rpmkey_resource_count(0) }
-  end
-
-  describe 'with repotype set to valid apt (no functionality yet)' do
-    let(:params) { mandatory_params.merge({ :repotype => 'apt' }) }
-
-    # only prints out the notice 'apt support coming'
-    it { should have_yumrepo_resource_count(0) }
-    it { should have_zypprepo_resource_count(0) }
-    it { should have_rpmkey_resource_count(0) }
-  end
-
-  # Repository handling
+  # repository handling
   %w[yum zypper].each do |repotype|
-    describe "with repotype set to #{repotype}" do
+    default_params = mandatory_params.merge({ :repotype => repotype })
 
+    describe "with repotype set to #{repotype}" do
       context 'when baseurl is set to valid string http://specific.url/REPO' do
-        let(:params) {
-          mandatory_params.merge({
-            :baseurl  => 'http://specific.url/REPO',
-            :repotype => repotype,
-          })
-        }
+        let(:params) { default_params.merge({ :baseurl => 'http://specific.url/REPO' }) }
         if repotype == 'yum'
           it { should contain_yumrepo('spectest-repo').with_baseurl('http://specific.url/REPO') }
         else
@@ -95,13 +91,40 @@ describe 'swrepo::repo' do
         end
       end
 
+      # ensure bool2str functionality
+      context 'when autorefresh is set to valid boolean true' do
+        let(:params) { default_params.merge({ :autorefresh => true }) }
+        if repotype == 'yum'
+          it { should contain_yumrepo('spectest-repo').without_autorefresh }
+        else
+          it { should contain_zypprepo('spectest-repo').with_autorefresh('1') }
+        end
+      end
 
-      context 'when baseurl contains uppercases and downcase_baseurl set to boolean true' do
+      # ensure backward compatibility for migration only
+      context 'when autorefresh is set to valid string 1' do
+        let(:params) { default_params.merge({ :autorefresh => '1' }) }
+        if repotype == 'yum'
+          it { should contain_yumrepo('spectest-repo').without_autorefresh }
+        else
+          it { should contain_zypprepo('spectest-repo').with_autorefresh('1') }
+        end
+      end
+
+      context 'when descr is set to valid string custom-repo' do
+        let(:params) { default_params.merge({ :descr => 'custom-repo' }) }
+        if repotype == 'yum'
+          it { should contain_yumrepo('spectest-repo').with_descr('custom-repo') }
+        else
+          it { should contain_zypprepo('spectest-repo').with_descr('custom-repo') }
+        end
+      end
+
+      context 'when downcase_baseurl is set to valid boolean true and baseurl contains uppercases' do
         let(:params) {
-          mandatory_params.merge({
+          default_params.merge({
             :baseurl          => 'http://specific.url/REPO',
             :downcase_baseurl => true,
-            :repotype         => repotype,
           })
         }
         if repotype == 'yum'
@@ -111,13 +134,9 @@ describe 'swrepo::repo' do
         end
       end
 
+      # ensure bool2str functionality
       context 'when enabled is set to valid boolean false' do
-        let(:params) {
-          mandatory_params.merge({
-            :enabled  => false,
-            :repotype => repotype,
-          })
-        }
+        let(:params) { default_params.merge({ :enabled => false }) }
         if repotype == 'yum'
           it { should contain_yumrepo('spectest-repo').with_enabled('0') }
         else
@@ -125,13 +144,9 @@ describe 'swrepo::repo' do
         end
       end
 
+      # ensure backward compatibility for migration only
       context 'when enabled is set to valid string 0' do
-        let(:params) {
-          mandatory_params.merge({
-            :enabled  => '0',
-            :repotype => repotype,
-          })
-        }
+        let(:params) { default_params.merge({ :enabled => '0' }) }
         if repotype == 'yum'
           it { should contain_yumrepo('spectest-repo').with_enabled('0') }
         else
@@ -139,41 +154,18 @@ describe 'swrepo::repo' do
         end
       end
 
-      context 'when autorefresh is set to valid boolean true' do
-        let(:params) {
-          mandatory_params.merge({
-            :autorefresh  => true,
-            :repotype     => repotype,
-          })
-        }
+      context 'when exclude is set to valid string not_me' do
+        let(:params) { default_params.merge({ :exclude => 'not_me' }) }
         if repotype == 'yum'
-          it { should contain_yumrepo('spectest-repo').without_autorefresh }
+          it { should contain_yumrepo('spectest-repo').with_exclude('not_me') }
         else
-          it { should contain_zypprepo('spectest-repo').with_autorefresh('1') }
+          it { should contain_zypprepo('spectest-repo').without_exclude }
         end
       end
 
-      context 'when autorefresh is set to valid string 1' do
-        let(:params) {
-          mandatory_params.merge({
-            :autorefresh  => '1',
-            :repotype     => repotype,
-          })
-        }
-        if repotype == 'yum'
-          it { should contain_yumrepo('spectest-repo').without_autorefresh }
-        else
-          it { should contain_zypprepo('spectest-repo').with_autorefresh('1') }
-        end
-      end
-
+      # ensure bool2str functionality
       context 'when gpgcheck is set to valid boolean true' do
-        let(:params) {
-          mandatory_params.merge({
-            :gpgcheck => true,
-            :repotype => repotype,
-          })
-        }
+        let(:params) { default_params.merge({ :gpgcheck => true }) }
         if repotype == 'yum'
           it { should contain_yumrepo('spectest-repo').with_gpgcheck('1') }
         else
@@ -181,13 +173,9 @@ describe 'swrepo::repo' do
         end
       end
 
+      # ensure backward compatibility for migration only
       context 'when gpgcheck is set to valid string 1' do
-        let(:params) {
-          mandatory_params.merge({
-            :gpgcheck => '1',
-            :repotype => repotype,
-          })
-        }
+        let(:params) { default_params.merge({ :gpgcheck => '1' }) }
         if repotype == 'yum'
           it { should contain_yumrepo('spectest-repo').with_gpgcheck('1') }
         else
@@ -196,12 +184,7 @@ describe 'swrepo::repo' do
       end
 
       context 'when gpgkey_source is set to valid string http://path.to/gpgkey' do
-        let(:params) {
-          mandatory_params.merge({
-            :gpgkey_source => 'http://path.to/gpgkey',
-            :repotype      => repotype,
-          })
-        }
+        let(:params) { default_params.merge({ :gpgkey_source => 'http://path.to/gpgkey' }) }
         if repotype == 'yum'
           it { should contain_yumrepo('spectest-repo').with_gpgkey('http://path.to/gpgkey') }
         else
@@ -209,41 +192,9 @@ describe 'swrepo::repo' do
         end
       end
 
-      context 'when priority is set to valid integer 42' do
-        let(:params) {
-          mandatory_params.merge({
-            :priority => 42,
-            :repotype => repotype,
-          })
-        }
-        if repotype == 'yum'
-          it { should contain_yumrepo('spectest-repo').with_priority('42') }
-        else
-          it { should contain_zypprepo('spectest-repo').with_priority('42') }
-        end
-      end
-
-      context 'when priority is set to valid string 42' do
-        let(:params) {
-          mandatory_params.merge({
-            :priority => '42',
-            :repotype => repotype,
-          })
-        }
-        if repotype == 'yum'
-          it { should contain_yumrepo('spectest-repo').with_priority('42') }
-        else
-          it { should contain_zypprepo('spectest-repo').with_priority('42') }
-        end
-      end
-
+      # ensure bool2str functionality
       context 'when keeppackages is set to valid boolean true' do
-        let(:params) {
-          mandatory_params.merge({
-            :keeppackages => true,
-            :repotype     => repotype,
-          })
-        }
+        let(:params) { default_params.merge({ :keeppackages => true }) }
         if repotype == 'yum'
           it { should contain_yumrepo('spectest-repo').without_keeppackages }
         else
@@ -251,13 +202,9 @@ describe 'swrepo::repo' do
         end
       end
 
+      # ensure backward compatibility for migration only
       context 'when keeppackages is set to valid string 1' do
-        let(:params) {
-          mandatory_params.merge({
-            :keeppackages => '1',
-            :repotype     => repotype,
-          })
-        }
+        let(:params) { default_params.merge({ :keeppackages => '1' }) }
         if repotype == 'yum'
           it { should contain_yumrepo('spectest-repo').without_keeppackages }
         else
@@ -265,55 +212,27 @@ describe 'swrepo::repo' do
         end
       end
 
-      context 'when type is set to valid string yum' do
-        let(:params) {
-          mandatory_params.merge({
-            :type     => 'yum',
-            :repotype => repotype,
-          })
-        }
+      context 'when priority is set to valid integer 42' do
+        let(:params) { default_params.merge({ :priority => 42 }) }
         if repotype == 'yum'
-          it { should contain_yumrepo('spectest-repo').without_type }
+          it { should contain_yumrepo('spectest-repo').with_priority('42') }
         else
-          it { should contain_zypprepo('spectest-repo').with_type('yum') }
+          it { should contain_zypprepo('spectest-repo').with_priority('42') }
         end
       end
 
-      context 'when descr is set to valid string custom-repo' do
-        let(:params) {
-          mandatory_params.merge({
-            :descr    => 'custom-repo',
-            :repotype => repotype,
-          })
-        }
+      # ensure backward compatibility for migration only
+      context 'when priority is set to valid string 42' do
+        let(:params) { default_params.merge({ :priority => '42' }) }
         if repotype == 'yum'
-          it { should contain_yumrepo('spectest-repo').with_descr('custom-repo') }
+          it { should contain_yumrepo('spectest-repo').with_priority('42') }
         else
-          it { should contain_zypprepo('spectest-repo').with_descr('custom-repo') }
-        end
-      end
-
-      context 'when exclude is set to valid string not_me' do
-        let(:params) {
-          mandatory_params.merge({
-            :exclude  => 'not_me',
-            :repotype => repotype,
-          })
-        }
-        if repotype == 'yum'
-          it { should contain_yumrepo('spectest-repo').with_exclude('not_me') }
-        else
-          it { should contain_zypprepo('spectest-repo').without_exclude }
+          it { should contain_zypprepo('spectest-repo').with_priority('42') }
         end
       end
 
       context 'when proxy is set to valid string http://proxy.test' do
-        let(:params) {
-          mandatory_params.merge({
-            :proxy    => 'http://proxy.test',
-            :repotype => repotype,
-          })
-        }
+        let(:params) { default_params.merge({ :proxy => 'http://proxy.test' }) }
         if repotype == 'yum'
           it { should contain_yumrepo('spectest-repo').with_proxy('http://proxy.test') }
         else
@@ -321,27 +240,27 @@ describe 'swrepo::repo' do
         end
       end
 
+      context 'when type is set to valid string yum' do
+        let(:params) { default_params.merge({ :type => 'yum' }) }
+        if repotype == 'yum'
+          it { should contain_yumrepo('spectest-repo').without_type }
+        else
+          it { should contain_zypprepo('spectest-repo').with_type('yum') }
+        end
+      end
     end
   end # %w[yum zypper].each do |repotype|
 
   # RPM Key handling
   describe 'with gpgkey_keyid set to valid string 0608B895' do
-    let(:params) {
-      mandatory_params.merge({
-        :gpgkey_keyid => '0608B895',
-      })
-    }
+    let(:params) { mandatory_params.merge({ :gpgkey_keyid => '0608B895' }) }
     it 'should fail' do
       expect { should contain_class(subject) }.to raise_error(Puppet::Error, /swrepo::repo::gpgkey_keyid is specified but swrepo::repo::gpgkey_source is missing/)
     end
   end
 
   describe 'with gpgkey_source set to valid string http://url.to/gpgkey' do
-    let(:params) {
-      mandatory_params.merge({
-        :gpgkey_source => 'http://url.to/gpgkey',
-      })
-    }
+    let(:params) { mandatory_params.merge({ :gpgkey_source => 'http://url.to/gpgkey' }) }
     it { should have_rpmkey_resource_count(0) }
   end
 
@@ -369,9 +288,10 @@ describe 'swrepo::repo' do
         :invalid => ['string', %w[array], { 'ha' => 'sh' }, 3, 2.42, nil],
         :message => '(is not a boolean|str2bool)',
       },
+      # ensure it only takes integers between 1 and 99
       'integer 1..99' => {
         :name    => %w(priority),
-        :valid   => [1,'99'],
+        :valid   => [1, 99],
         :invalid => [0, 100, 'string', %w(array), { 'ha' => 'sh' }, 2.42, true, nil],
         :message => '(is not an integer|is not a number|validate_integer)',
       },
@@ -399,7 +319,7 @@ describe 'swrepo::repo' do
         :invalid => [%w[array], { 'ha' => 'sh' }, 3, 2.42, true],
         :message => 'is not a string',
       },
-      'string' => {
+      'string (HEX)' => {
         :name    => %w[gpgkey_keyid],
         :params  => { :gpgkey_source => 'http://spec.test/repo' }, # mandatory for gpgkey_keyid usage
         :valid   => %w[DEADC0DE],
