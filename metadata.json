@@ -1,12 +1,12 @@
 {
-  "name": "jwennerberg-swrepo",
-  "version": "0.4.0",
+  "name": "kodguru-swrepo",
+  "version": "1.0.0",
   "author": "jwennerberg",
   "summary": "Manage software repositories",
   "license": "Apache-2.0",
-  "source": "git://github.com/jwennerberg/puppet-module-swrepo.git",
-  "project_page": "https://github.com/jwennerberg/puppet-module-swrepo",
-  "issues_url": "https://github.com/jwennerberg/puppet-module-swrepo/issues",
+  "source": "https://github.com/kodguru/puppet-module-swrepo.git",
+  "project_page": "https://github.com/kodguru/puppet-module-swrepo",
+  "issues_url": "https://github.com/kodguru/puppet-module-swrepo/issues",
   "requirements": [
     {
       "name": "puppet",
@@ -15,16 +15,36 @@
   ],
   "operatingsystem_support": [
     {
-      "operatingsystem": "RedHat"
+      "operatingsystem": "RedHat",
+      "operatingsystemrelease": [
+        "5",
+        "6",
+        "7"
+      ]
     },
     {
-      "operatingsystem": "CentOS"
+      "operatingsystem": "CentOS",
+      "operatingsystemrelease": [
+        "5",
+        "6",
+        "7"
+      ]
     },
     {
-      "operatingsystem": "OracleLinux"
+      "operatingsystem": "OracleLinux",
+      "operatingsystemrelease": [
+        "5",
+        "6",
+        "7"
+      ]
     },
     {
-      "operatingsystem": "Scientific"
+      "operatingsystem": "Scientific",
+      "operatingsystemrelease": [
+        "5",
+        "6",
+        "7"
+      ]
     },
     {
       "operatingsystem": "SLES",
