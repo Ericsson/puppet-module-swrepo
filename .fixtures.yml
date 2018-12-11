@@ -1,7 +1,13 @@
 fixtures:
   repositories:
+    'rpmkey':
+      repo: 'git://github.com/stschulte/puppet-rpmkey.git'
+      ref: 'v1.0.3'
     'stdlib':
       repo: 'git://github.com/puppetlabs/puppetlabs-stdlib.git'
       ref: '4.6.0'
+    'zypprepo':
+      repo: 'git://github.com/voxpupuli/puppet-zypprepo.git'
+      ref: 'v1.0.2'
   symlinks:
     swrepo: "#{source_dir}"
