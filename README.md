@@ -1,6 +1,6 @@
 # puppet-module-swrepo
 
-[![Build Status](https://travis-ci.org/jwennerberg/puppet-module-swrepo.png?branch=master)](https://travis-ci.org/jwennerberg/puppet-module-swrepo)
+[![Build Status](https://travis-ci.org/kodguru/puppet-module-swrepo.png?branch=master)](https://travis-ci.org/kodguru/puppet-module-swrepo)
 
 #### Table of Contents
 
