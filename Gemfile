@@ -19,7 +19,7 @@ gem 'puppet-lint-trailing_comma-check'
 gem 'puppet-lint-undef_in_function-check'
 gem 'puppet-lint-unquoted_string-check'
 gem 'puppet-lint-variable_contains_upcase'
-gem 'rspec-puppet', '~> 2.5.0'
+gem 'rspec-puppet', '~> 2.7.0'
 
 gem 'json',                   '<= 1.8'   if RUBY_VERSION < '2.0.0'
 gem 'json_pure',              '<= 2.0.1' if RUBY_VERSION < '2.0.0'
