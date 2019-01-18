@@ -6,12 +6,8 @@ fixtures:
     'stdlib':
       repo: 'git://github.com/puppetlabs/puppetlabs-stdlib.git'
       ref: '4.6.0'
-    yumrepo:
-      repo: 'git://github.com/puppetlabs/puppetlabs-yumrepo_core.git'
-      ref: '1.0.1'
-      puppet_version: ">= 6.0.0"
-    zypprepo:
+    'zypprepo':
       repo: 'git://github.com/voxpupuli/puppet-zypprepo.git'
-      ref: 'v2.2.2'
+      ref: 'v1.0.2'
   symlinks:
     swrepo: "#{source_dir}"
