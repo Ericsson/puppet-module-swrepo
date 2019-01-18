@@ -6,6 +6,7 @@
 
 1. [Module Description](#module-description)
 2. [Compatibility](#compatibility)
+    * [Dependencies](#dependencies)
 3. [Class Descriptions](#class-descriptions)
     * [swrepo](#class-swrepo)
 4. [Define Descriptions](#define-descriptions)
@@ -28,7 +29,13 @@ has also been tested on Puppet 4, 5 and 6.
 * Suse 11
 * Suse 12
 
-This module uses the custom types [zypprepo](https://github.com/deadpoint/puppet-zypprepo) and [rpmkey](https://github.com/stschulte/puppet-rpmkey).
+## Dependencies
+This module uses the custom types [zypprepo](https://github.com/voxpupuli/puppet-zypprepo) and [rpmkey](https://github.com/stschulte/puppet-rpmkey) as dependencies.
+
+Please ensure that both of these modules are available in your setup:
+
+* https://github.com/voxpupuli/puppet-zypprepo
+* https://github.com/stschulte/puppet-rpmkey
 
 # Class Descriptions
 ## Class `swrepo`
@@ -180,4 +187,6 @@ Specify the ```type``` parameter. Valid values are 'yum', 'yast2', 'rpm-md', and
 
 # Changelog
 
+* 2.0.0 Adds support for Puppet 5 & 6
+        Copied dependencies have been removed. It is needed to include stschulte/puppet-rpmkey and voxpupuli/puppet-zypprepo manually instead.
 * 1.0.0 First stable release
