@@ -3,41 +3,60 @@
 # Module to manage swrepo
 #
 class swrepo (
-  $repotype         = undef,
-  $repos            = undef,
-  $hiera_merge      = false,
-  $config_dir_name  = undef,
-  $config_dir_purge = false,
+  $repotype                 = undef,
+  $repos                    = undef,
+  $hiera_merge              = false,
+  $config_dir_name          = undef,
+  $config_dir_purge         = false,
+  $apt_setting              = undef,
+  $apt_setting_hiera_merge  = false,
 ) {
 
   $hiera_merge_real = str2bool($hiera_merge)
   validate_bool($hiera_merge_real)
+  $apt_setting_hiera_merge_real = str2bool($apt_setting_hiera_merge)
+  validate_bool($apt_setting_hiera_merge_real)
+  $config_dir_purge_real = str2bool($config_dir_purge)
+  validate_bool($config_dir_purge_real)
+
+  if $config_dir_name and is_string($config_dir_name) == false {
+    fail('swrepo::config_dir_name is not a string')
+  }
+
   if is_string($repotype) == false { fail('swrepo::repotype is not a string') }
+
+  if $repotype == 'apt' and $::osfamily != 'Debian' { fail('swrepo::repo::repotype with value apt is only valid on osfamily Debian' ) }
 
   case $::osfamily {
     'RedHat': {
       $repotype_default = 'yum'
       $config_dir_name_real = '/etc/yum.repos.d'
-      file { "$config_dir_name_real/redhat.repo":
-        require => File[$config_dir_name_real],
+      if $config_dir_purge_real == true {
+        file { "${config_dir_name_real}/redhat.repo":
+          require => File[$config_dir_name_real],
+        }
       }
     }
     'Suse':   {
       $config_dir_name_real = '/etc/zypp/repos.d'
       case $::operatingsystemrelease {
         /^(11|12)\./: { $repotype_default = 'zypper' }
-        default:      { fail("Supported osfamilies are RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::operatingsystemrelease}>") }
+        default:      { fail("Supported osfamilies are Debian, RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::operatingsystemrelease}>") }
       }
     }
-    default:  { fail("Supported osfamilies are RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::operatingsystemrelease}>") }
+    'Debian':  {
+      $repotype_default = 'apt'
+      $config_dir_name_real = undef
+    }
+    default: { fail("Supported osfamilies are Debian, RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::operatingsystemrelease}>") }
   }
 
   # Manage repo directory
-  if $config_dir_name_real != undef {
+  if $config_dir_purge_real == true and $config_dir_name_real != undef {
     file { $config_dir_name_real:
       ensure  => directory,
-      recurse => $config_dir_purge,
-      purge   => $config_dir_purge,
+      recurse => $config_dir_purge_real,
+      purge   => $config_dir_purge_real,
     }
   }
 
@@ -47,7 +66,9 @@ class swrepo (
   }
 
   $defaults = {
-    repotype => $repotype_real,
+    repotype          => $repotype_real,
+    config_dir        => $config_dir_name_real,
+    config_dir_purge  => $config_dir_purge_real,
   }
 
   if $repos != undef {
@@ -58,5 +79,15 @@ class swrepo (
     }
     validate_hash($repos_real)
     create_resources('swrepo::repo', $repos_real, $defaults)
+  }
+
+  if $apt_setting != undef {
+    if $apt_setting_hiera_merge_real == true {
+      $apt_setting_real = hiera_hash('swrepo::apt_setting')
+    } else {
+      $apt_setting_real = $apt_setting
+    }
+    validate_hash($apt_setting_real)
+    create_resources('apt::setting', $apt_setting_real)
   }
 }
