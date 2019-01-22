@@ -17,6 +17,8 @@ define swrepo::repo (
   $priority         = undef,
   $proxy            = undef,
   $type             = undef,
+  $apt_repos        = 'main',
+  $apt_release      = undef,
 ) {
 
   # variable validations
@@ -24,7 +26,9 @@ define swrepo::repo (
   validate_re($baseurl,  '^https?:\/\/[\S]+$', 'swrepo::repo::baseurl is not an URL.')
 
   if is_string($repotype) == false { fail('swrepo::repo::repotype is not a string.') }
-  validate_re($repotype, '^(yum|zypper)$', 'swrepo::repo::repotype is invalid. Supported values are yum and zypper.')
+  validate_re($repotype, '^(apt|yum|zypper)$', 'swrepo::repo::repotype is invalid. Supported values are apt, yum and zypper.')
+
+  if is_string($apt_repos) == false { fail('swrepo::repo::repos is not a string.') }
 
   if $autorefresh == undef {
     $autorefresh_num = undef
@@ -41,6 +45,21 @@ define swrepo::repo (
   }
 
   $enabled_num = bool2num(str2bool("${enabled}")) # lint:ignore:only_variable_string
+
+  if $::operatingsystem == 'Ubuntu' {
+    if $gpgkey_keyid != undef and $gpgkey_source != undef {
+      $gpgkey_hash = {'id' => $gpgkey_keyid, 'source' => $gpgkey_source}
+    } else {
+      $gpgkey_hash = undef
+    }
+    if $enabled_num == 1 {
+      $enabled_real = 'present'
+    } else {
+      $enabled_real = 'absent'
+    }
+  } else {
+    $enabled_real = $enabled_num
+  }
 
   if $exclude != undef {
     if is_string($exclude) == false { fail('swrepo::repo::exclude is not a string.') }
@@ -93,7 +112,7 @@ define swrepo::repo (
       yumrepo { $name:
         baseurl  => $baseurl_real,
         descr    => $descr,
-        enabled  => $enabled_num,
+        enabled  => $enabled_real,
         gpgcheck => $gpgcheck_num,
         gpgkey   => $gpgkey_source,
         priority => $priority_num,
@@ -105,7 +124,7 @@ define swrepo::repo (
       zypprepo { $name:
         baseurl      => $baseurl_real,
         descr        => $descr,
-        enabled      => $enabled_num,
+        enabled      => $enabled_real,
         gpgcheck     => $gpgcheck_num,
         gpgkey       => $gpgkey_source,
         priority     => $priority_num,
@@ -114,8 +133,19 @@ define swrepo::repo (
         autorefresh  => $autorefresh_num,
       }
     }
+    'apt': {
+      apt::source { $name:
+        location       => $baseurl_real,
+        comment        => $descr,
+        ensure         => $enabled_real,
+        allow_unsigned => $gpgcheck_num,
+        key            => $gpgkey_hash,
+        repos          => $apt_repos,
+        release        => $apt_release,
+      }
+    }
     default: {
-      fail("Invalid repotype ${repotype}. Supported repotypes are yum, zypper and apt.")
+      fail("Invalid repotype ${repotype}. Supported repotypes are apt, yum and zypper.")
     }
   }
 

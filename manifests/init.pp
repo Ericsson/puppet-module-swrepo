@@ -8,6 +8,7 @@ class swrepo (
   $hiera_merge      = false,
   $config_dir_name  = undef,
   $config_dir_purge = false,
+  $apt_setting      = undef,
 ) {
 
   $hiera_merge_real = str2bool($hiera_merge)
@@ -26,10 +27,14 @@ class swrepo (
       $config_dir_name_real = '/etc/zypp/repos.d'
       case $::operatingsystemrelease {
         /^(11|12)\./: { $repotype_default = 'zypper' }
-        default:      { fail("Supported osfamilies are RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::operatingsystemrelease}>") }
+        default:      { fail("Supported osfamilies are RedHat, Suse 11/12 and Ubuntu. Yours identified as <${::osfamily}-${::operatingsystemrelease}>") }
       }
     }
-    default:  { fail("Supported osfamilies are RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::operatingsystemrelease}>") }
+    'Debian':  {
+      $repotype_default = 'apt'
+      $config_dir_name_real = undef
+    }
+    default: { fail("Supported osfamilies are RedHat and Suse 11/12 and Ubuntu. Yours identified as <${::osfamily}-${::operatingsystemrelease}>") }
   }
 
   # Manage repo directory
@@ -58,5 +63,15 @@ class swrepo (
     }
     validate_hash($repos_real)
     create_resources('swrepo::repo', $repos_real, $defaults)
+  }
+
+  if $apt_setting != undef {
+    if $hiera_merge_real == true {
+      $apt_setting_real = hiera_hash('swrepo::apt_setting')
+    } else {
+      $apt_setting_real = $apt_setting
+    }
+    validate_hash($apt_setting_real)
+    create_resources('apt::setting', $apt_setting_real)
   }
 }
