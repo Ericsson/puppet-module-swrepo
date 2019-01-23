@@ -13,7 +13,16 @@ class swrepo (
 
   $hiera_merge_real = str2bool($hiera_merge)
   validate_bool($hiera_merge_real)
+  $config_dir_purge_real = str2bool($config_dir_purge)
+  validate_bool($config_dir_purge_real)
+
+  if $config_dir_name and is_string($config_dir_name) == false {
+    fail('swrepo::config_dir_name is not a string')
+  }
+
   if is_string($repotype) == false { fail('swrepo::repotype is not a string') }
+
+  if $repotype == 'apt' and $::osfamily != 'Debian' { fail('swrepo::repo::repotype with value apt is only valid on osfamily Debian' ) }
 
   case $::osfamily {
     'RedHat': {

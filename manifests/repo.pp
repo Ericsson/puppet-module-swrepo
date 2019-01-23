@@ -135,9 +135,9 @@ define swrepo::repo (
     }
     'apt': {
       apt::source { $name:
+        ensure         => $enabled_real,
         location       => $baseurl_real,
         comment        => $descr,
-        ensure         => $enabled_real,
         allow_unsigned => $gpgcheck_num,
         key            => $gpgkey_hash,
         repos          => $apt_repos,
