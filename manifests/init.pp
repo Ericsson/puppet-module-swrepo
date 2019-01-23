@@ -63,7 +63,9 @@ class swrepo (
   }
 
   $defaults = {
-    repotype => $repotype_real,
+    repotype          => $repotype_real,
+    config_dir        => $config_dir_name_real,
+    config_dir_purge  => $config_dir_purge_real,
   }
 
   if $repos != undef {

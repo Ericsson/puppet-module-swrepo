@@ -19,6 +19,8 @@ define swrepo::repo (
   $type             = undef,
   $apt_repos        = 'main',
   $apt_release      = undef,
+  $config_dir       = undef,
+  $config_dir_purge = undef,
 ) {
 
   # variable validations
@@ -151,9 +153,9 @@ define swrepo::repo (
 
   # Associate .repo files in directory for yum and zypper
   # This is to prevent files from being purged
-  if $swrepo::config_dir_purge_real == true and  $swrepo::config_dir_name_real != undef {
-    file { "${swrepo::config_dir_name_real}/${name}.repo":
-      require => File[$swrepo::config_dir_name_real],
+  if $config_dir_purge == true and $config_dir != undef {
+    file { "${config_dir}/${name}.repo":
+      require => File[$config_dir],
     }
   }
 
