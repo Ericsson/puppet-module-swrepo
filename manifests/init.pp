@@ -27,14 +27,14 @@ class swrepo (
       $config_dir_name_real = '/etc/zypp/repos.d'
       case $::operatingsystemrelease {
         /^(11|12)\./: { $repotype_default = 'zypper' }
-        default:      { fail("Supported osfamilies are RedHat, Suse 11/12 and Ubuntu. Yours identified as <${::osfamily}-${::operatingsystemrelease}>") }
+        default:      { fail("Supported osfamilies are Debian, RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::operatingsystemrelease}>") }
       }
     }
     'Debian':  {
       $repotype_default = 'apt'
       $config_dir_name_real = undef
     }
-    default: { fail("Supported osfamilies are RedHat and Suse 11/12 and Ubuntu. Yours identified as <${::osfamily}-${::operatingsystemrelease}>") }
+    default: { fail("Supported osfamilies are Debian, RedHat and Suse 11/12. Yours identified as <${::osfamily}-${::operatingsystemrelease}>") }
   }
 
   # Manage repo directory

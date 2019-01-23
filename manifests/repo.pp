@@ -46,7 +46,7 @@ define swrepo::repo (
 
   $enabled_num = bool2num(str2bool("${enabled}")) # lint:ignore:only_variable_string
 
-  if $::operatingsystem == 'Ubuntu' {
+  if $::osfamily == 'Debian' {
     if $gpgkey_keyid != undef and $gpgkey_source != undef {
       $gpgkey_hash = {'id' => $gpgkey_keyid, 'source' => $gpgkey_source}
     } else {
