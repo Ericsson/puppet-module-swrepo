@@ -28,8 +28,10 @@ class swrepo (
     'RedHat': {
       $repotype_default = 'yum'
       $config_dir_name_real = '/etc/yum.repos.d'
-      file { "$config_dir_name_real/redhat.repo":
-        require => File[$config_dir_name_real],
+      if $config_dir_purge_real == true {
+        file { "${config_dir_name_real}/redhat.repo":
+          require => File[$config_dir_name_real],
+        }
       }
     }
     'Suse':   {
@@ -47,11 +49,11 @@ class swrepo (
   }
 
   # Manage repo directory
-  if $config_dir_name_real != undef {
+  if $config_dir_purge_real == true and $config_dir_name_real != undef {
     file { $config_dir_name_real:
       ensure  => directory,
-      recurse => $config_dir_purge,
-      purge   => $config_dir_purge,
+      recurse => $config_dir_purge_real,
+      purge   => $config_dir_purge_real,
     }
   }
 

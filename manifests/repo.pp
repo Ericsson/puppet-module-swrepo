@@ -151,7 +151,7 @@ define swrepo::repo (
 
   # Associate .repo files in directory for yum and zypper
   # This is to prevent files from being purged
-  if $swrepo::config_dir_name_real != undef {
+  if $swrepo::config_dir_purge_real == true and  $swrepo::config_dir_name_real != undef {
     file { "${swrepo::config_dir_name_real}/${name}.repo":
       require => File[$swrepo::config_dir_name_real],
     }
