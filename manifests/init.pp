@@ -3,16 +3,19 @@
 # Module to manage swrepo
 #
 class swrepo (
-  $repotype         = undef,
-  $repos            = undef,
-  $hiera_merge      = false,
-  $config_dir_name  = undef,
-  $config_dir_purge = false,
-  $apt_setting      = undef,
+  $repotype                 = undef,
+  $repos                    = undef,
+  $hiera_merge              = false,
+  $config_dir_name          = undef,
+  $config_dir_purge         = false,
+  $apt_setting              = undef,
+  $apt_setting_hiera_merge  = false,
 ) {
 
   $hiera_merge_real = str2bool($hiera_merge)
   validate_bool($hiera_merge_real)
+  $apt_setting_hiera_merge_real = str2bool($apt_setting_hiera_merge)
+  validate_bool($apt_setting_hiera_merge_real)
   $config_dir_purge_real = str2bool($config_dir_purge)
   validate_bool($config_dir_purge_real)
 
@@ -79,7 +82,7 @@ class swrepo (
   }
 
   if $apt_setting != undef {
-    if $hiera_merge_real == true {
+    if $apt_setting_hiera_merge_real == true {
       $apt_setting_real = hiera_hash('swrepo::apt_setting')
     } else {
       $apt_setting_real = $apt_setting
