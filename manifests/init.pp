@@ -5,15 +5,30 @@
 class swrepo (
   $repotype                 = undef,
   $repos                    = undef,
-  $hiera_merge              = false,
+  $repos_hiera_merge        = false,
+  $hiera_merge              = undef,
   $config_dir_name          = undef,
   $config_dir_purge         = false,
   $apt_setting              = undef,
   $apt_setting_hiera_merge  = false,
 ) {
 
-  $hiera_merge_real = str2bool($hiera_merge)
-  validate_bool($hiera_merge_real)
+  $repos_hiera_merge_bool = str2bool($repos_hiera_merge)
+  validate_bool($repos_hiera_merge_bool)
+
+  if $hiera_merge != undef {
+    notify { '*** DEPRECATION WARNING***: Using $hiera_merge is deprecated. Please use $repos_hiera_merge instead!': }
+    $hiera_merge_bool = str2bool($hiera_merge)
+    validate_bool($hiera_merge_bool)
+    if $repos_hiera_merge_bool != $hiera_merge_bool {
+      fail("Different values for \$repos_hiera_merge (${repos_hiera_merge}) and \$hiera_merge (${hiera_merge}). Please use only one.")
+    } else {
+      $repos_hiera_merge_real = $hiera_merge_bool
+    }
+  } else {
+    $repos_hiera_merge_real = $repos_hiera_merge_bool
+  }
+
   $apt_setting_hiera_merge_real = str2bool($apt_setting_hiera_merge)
   validate_bool($apt_setting_hiera_merge_real)
   $config_dir_purge_real = str2bool($config_dir_purge)
@@ -72,7 +87,7 @@ class swrepo (
   }
 
   if $repos != undef {
-    if $hiera_merge_real == true {
+    if $repos_hiera_merge_real == true {
       $repos_real = hiera_hash('swrepo::repos')
     } else {
       $repos_real = $repos

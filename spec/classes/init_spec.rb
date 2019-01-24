@@ -198,15 +198,30 @@ describe 'swrepo' do
         }
       end
 
+      context 'when hiera_merge and repos_hiera_merge both are set' do
+        context 'and they have the same values' do
+          let(:params) { { :repos_hiera_merge => true, :hiera_merge => true } }
+          it { should compile.with_all_deps }
+          it { should contain_notify('*** DEPRECATION WARNING***: Using $hiera_merge is deprecated. Please use $repos_hiera_merge instead!') }
+        end
+        context 'and they have different values' do
+          let(:params) { { :repos_hiera_merge => true, :hiera_merge => false } }
+          it 'should fail' do
+            expect { should contain_class('swrepo') }.to raise_error(Puppet::Error, %r{Different values for \$repos_hiera_merge \(true\) and \$hiera_merge \(false\)})
+          end
+        end
+
+      end
+
       context 'when repos is unset' do
-        context 'with hiera_merge set to boolean false' do
-          let(:params) { { :hiera_merge => false } }
+        context 'with repos_hiera_merge set to boolean false' do
+          let(:params) { { :repos_hiera_merge => false } }
           it { should have_swrepo__repo_resource_count(1) }
           it { should contain_swrepo__repo('hiera-fqdn').with_baseurl('http://hiera.fqdn/repo') }
         end
 
-        context 'with hiera_merge set to boolean true' do
-          let(:params) { { :hiera_merge => true } }
+        context 'with repos_hiera_merge set to boolean true' do
+          let(:params) { { :repos_hiera_merge => true } }
           it { should have_swrepo__repo_resource_count(2) }
           it { should contain_swrepo__repo('hiera-common').with_baseurl('http://hiera.common/repo') }
           it { should contain_swrepo__repo('hiera-fqdn').with_baseurl('http://hiera.fqdn/repo') }
@@ -214,15 +229,15 @@ describe 'swrepo' do
       end
 
       context 'when repos is set to a valid hash' do
-        context 'with hiera_merge set to boolean false' do
-          let(:params) { { :repos => repos_hash}.merge({ :hiera_merge => false }) }
+        context 'with repos_hiera_merge set to boolean false' do
+          let(:params) { { :repos => repos_hash}.merge({ :repos_hiera_merge => false }) }
           it { should have_swrepo__repo_resource_count(2) }
           it { should contain_swrepo__repo('params-hash1').with_baseurl('http://params.hash/repo1') }
           it { should contain_swrepo__repo('params-hash2').with_baseurl('http://params.hash/repo2') }
         end
 
-        context 'with hiera_merge set to boolean true' do
-          let(:params) { { :repos => repos_hash}.merge({ :hiera_merge => true }) }
+        context 'with repos_hiera_merge set to boolean true' do
+          let(:params) { { :repos => repos_hash}.merge({ :repos_hiera_merge => true }) }
           it { should have_swrepo__repo_resource_count(2) }
           it { should_not contain_swrepo__repo('params-hash1') }
           it { should_not contain_swrepo__repo('params-hash2') }
@@ -299,7 +314,7 @@ describe 'swrepo' do
     mandatory_params = {}
     validations = {
       'boolean' => {
-        :name    => %w[apt_setting_hiera_merge config_dir_purge hiera_merge],
+        :name    => %w[apt_setting_hiera_merge config_dir_purge repos_hiera_merge],
         :valid   => [true, 'false'],
         :invalid => ['string', %w[array], { 'ha' => 'sh' }, 3, 2.42, nil],
         :message => 'str2bool',
