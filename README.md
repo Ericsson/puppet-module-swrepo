@@ -28,12 +28,15 @@ has also been tested on Puppet 4, 5 and 6.
 * EL 5
 * Suse 11
 * Suse 12
+* Ubuntu 16.04
+* Ubuntu 18.04
 
 ## Dependencies
-This module uses the custom types [zypprepo](https://github.com/voxpupuli/puppet-zypprepo) and [rpmkey](https://github.com/stschulte/puppet-rpmkey) as dependencies.
+This module uses the custom types [apt](https://github.com/puppetlabs/puppetlabs-apt), [zypprepo](https://github.com/voxpupuli/puppet-zypprepo) and [rpmkey](https://github.com/stschulte/puppet-rpmkey) as dependencies.
 
 Please ensure that both of these modules are available in your setup:
 
+* https://github.com/puppetlabs/puppetlabs-apt
 * https://github.com/voxpupuli/puppet-zypprepo
 * https://github.com/stschulte/puppet-rpmkey
 
