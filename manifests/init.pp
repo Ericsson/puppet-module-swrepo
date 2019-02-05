@@ -5,7 +5,7 @@
 class swrepo (
   $repotype                 = undef,
   $repos                    = undef,
-  $repos_hiera_merge        = false,
+  $repos_hiera_merge        = undef, # Use 'false' once $hiera_merge is deprecated
   $hiera_merge              = undef,
   $config_dir_name          = undef,
   $config_dir_purge         = false,
@@ -25,6 +25,8 @@ class swrepo (
     } else {
       $repos_hiera_merge_real = $hiera_merge_bool
     }
+  } elsif $repos_hiera_merge == undef { # Remove elseif once $hiera_merge is deprecated
+    $repos_hiera_merge_real = false
   } else {
     $repos_hiera_merge_real = $repos_hiera_merge_bool
   }
