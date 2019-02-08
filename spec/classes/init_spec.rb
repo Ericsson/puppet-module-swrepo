@@ -101,7 +101,13 @@ describe 'swrepo' do
   end
 
   describe "when repotype is set to apt" do
-    let(:params) { { :repotype => 'apt', :repos => repos_apt_hash, :apt_setting => apt_setting_hash } }
+    let(:params) do
+      {
+        :repotype    => 'apt',
+        :repos       => repos_apt_hash,
+        :apt_setting => apt_setting_hash,
+      }
+    end
     supported_os_families.sort.each do |os, facts|
       context "and osfamily is #{facts[:os]} and repos and apt_setting set" do
         let(:facts) do
