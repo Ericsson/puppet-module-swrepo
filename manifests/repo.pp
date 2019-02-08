@@ -55,9 +55,7 @@ define swrepo::repo (
     } else {
       $gpgkey_hash = undef
     }
-    $enabled_real = bool2str($enabled_bool, 'present', 'absent')
-  } else {
-    $enabled_real = $enabled_num
+    $enabled_str  = bool2str($enabled_bool, 'present', 'absent')
   }
 
   if $exclude != undef {
@@ -111,7 +109,7 @@ define swrepo::repo (
       yumrepo { $name:
         baseurl  => $baseurl_real,
         descr    => $descr,
-        enabled  => $enabled_real,
+        enabled  => $enabled_num,
         gpgcheck => $gpgcheck_num,
         gpgkey   => $gpgkey_source,
         priority => $priority_num,
@@ -123,7 +121,7 @@ define swrepo::repo (
       zypprepo { $name:
         baseurl      => $baseurl_real,
         descr        => $descr,
-        enabled      => $enabled_real,
+        enabled      => $enabled_num,
         gpgcheck     => $gpgcheck_num,
         gpgkey       => $gpgkey_source,
         priority     => $priority_num,
@@ -134,7 +132,7 @@ define swrepo::repo (
     }
     'apt': {
       apt::source { $name:
-        ensure         => $enabled_real,
+        ensure         => $enabled_str,
         location       => $baseurl_real,
         comment        => $descr,
         allow_unsigned => $gpgcheck_num,
