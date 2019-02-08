@@ -325,6 +325,22 @@ describe 'swrepo' do
         :invalid => ['string', %w[array], { 'ha' => 'sh' }, 3, 2.42, nil],
         :message => 'str2bool',
       },
+      # hiera_merge will be deprecated and needs to be equal to repos_hiera_merge until then
+      'boolean (hiera_merge = false)' => {
+        :name    => %w[hiera_merge],
+        :valid   => [false, 'false'],
+        :params  => {:repos_hiera_merge => false},
+        :invalid => [], # will be tested in the next case
+        :message => 'str2bool',
+      },
+      # hiera_merge will be deprecated and needs to be equal to repos_hiera_merge until then
+      'boolean (hiera_merge = true)' => {
+        :name    => %w[hiera_merge],
+        :valid   => [true, 'true'],
+        :params  => {:repos_hiera_merge => true},
+        :invalid => ['string', %w[array], { 'ha' => 'sh' }, 3, 2.42, nil],
+        :message => 'str2bool',
+      },
       'hash-repos' => {
         :name    => %w[repos],
         :valid   => [repos_hash], # valid hashes are to complex to block test them here.
