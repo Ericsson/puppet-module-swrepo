@@ -24,21 +24,44 @@ define swrepo::repo (
 ) {
 
   # variable validations
+  if is_string($apt_repos) == false { fail('swrepo::repo::apt_repos is not a string.') }
+  if is_string($descr) == false { fail('swrepo::repo::descr is not a string.') }
+  if $exclude != undef and is_string($exclude) == false { fail('swrepo::repo::exclude is not a string.') }
+  if $gpgkey_keyid != undef and is_string($gpgkey_keyid) == false { fail('swrepo::repo::gpgkey_keyid is not a string.') }
+  if $gpgkey_keyid != undef and $gpgkey_source == undef { fail('swrepo::repo::gpgkey_keyid is specified but swrepo::repo::gpgkey_source is missing.') }
+
   if is_string($baseurl) == false { fail('swrepo::repo::baseurl is not a string.') }
   validate_re($baseurl,  '^https?:\/\/[\S]+$', 'swrepo::repo::baseurl is not an URL.')
 
   if is_string($repotype) == false { fail('swrepo::repo::repotype is not a string.') }
   validate_re($repotype, '^(apt|yum|zypper)$', 'swrepo::repo::repotype is invalid. Supported values are apt, yum and zypper.')
 
-  if is_string($apt_repos) == false { fail('swrepo::repo::apt_repos is not a string.') }
+  if $proxy != undef {
+    if is_string($proxy) == false { fail('swrepo::repo::proxy is not a string.') }
+    validate_re($proxy, '^https?:\/\/[\S]+$', 'swrepo::repo::proxy is not an URL.')
+  }
 
+  if $type != undef {
+    if is_string($type) == false { fail('swrepo::repo::type is not a string.') }
+    validate_re($type, '^(yum|yast2|rpm-md|plaindir)$', 'swrepo::repo::type is invalid. Supported values are yum, yast2, rpm-md, and plaindir.')
+  }
+
+  if $gpgkey_source != undef {
+    if is_string($gpgkey_source) == false { fail('swrepo::repo::gpgkey_source is not a string.') }
+    validate_re($gpgkey_source, '^https?:\/\/[\S]+$', 'swrepo::repo::gpgkey_source is not an URL.')
+  }
+
+  if $priority != undef {
+    if is_integer($priority) == false { fail('swrepo::repo::priority is not an integer.') }
+    validate_integer(0 + $priority, 99, 1) # convert stringified values to integer and test range
+  }
+
+  # variable preparations
   if $autorefresh == undef {
     $autorefresh_num = undef
   } else {
     $autorefresh_num = bool2num(str2bool("${autorefresh}")) # lint:ignore:only_variable_string
   }
-
-  if is_string($descr) == false { fail('swrepo::repo::descr is not a string.') }
 
   if str2bool("${downcase_baseurl}") { # lint:ignore:only_variable_string
     $baseurl_real = downcase($baseurl)
@@ -58,23 +81,10 @@ define swrepo::repo (
     $enabled_str  = bool2str($enabled_bool, 'present', 'absent')
   }
 
-  if $exclude != undef {
-    if is_string($exclude) == false { fail('swrepo::repo::exclude is not a string.') }
-  }
-
   if $gpgcheck == undef {
     $gpgcheck_num = undef
   } else {
     $gpgcheck_num = bool2num(str2bool("${gpgcheck}")) # lint:ignore:only_variable_string
-  }
-
-  if $gpgkey_keyid != undef {
-    if is_string($gpgkey_keyid) == false { fail('swrepo::repo::gpgkey_keyid is not a string.') }
-  }
-
-  if $gpgkey_source != undef {
-    if is_string($gpgkey_source) == false { fail('swrepo::repo::gpgkey_source is not a string.') }
-    validate_re($gpgkey_source, '^https?:\/\/[\S]+$', 'swrepo::repo::gpgkey_source is not an URL.')
   }
 
   if $keeppackages == undef {
@@ -86,21 +96,7 @@ define swrepo::repo (
   if $priority == undef {
     $priority_num = undef
   } else {
-    case type3x($priority) {
-      'integer': { $priority_num = 0 + $priority } # convert stringified to number
-      default:   { fail('swrepo::repo::priority is not an integer.') }
-    }
-    validate_integer($priority_num, 99, 1)
-  }
-
-  if $proxy != undef {
-    if is_string($proxy) == false { fail('swrepo::repo::proxy is not a string.') }
-    validate_re($proxy, '^https?:\/\/[\S]+$', 'swrepo::repo::proxy is not an URL.')
-  }
-
-  if $type != undef {
-    if is_string($type) == false { fail('swrepo::repo::type is not a string.') }
-    validate_re($type, '^(yum|yast2|rpm-md|plaindir)$', 'swrepo::repo::type is invalid. Supported values are yum, yast2, rpm-md, and plaindir.')
+    $priority_num = 0 + $priority # convert stringified to number
   }
 
   # functionality
@@ -152,10 +148,6 @@ define swrepo::repo (
     file { "${config_dir}/${name}.repo":
       require => File[$config_dir],
     }
-  }
-
-  if $gpgkey_keyid != undef and $gpgkey_source == undef {
-      fail('swrepo::repo::gpgkey_keyid is specified but swrepo::repo::gpgkey_source is missing.')
   }
 
   if $repotype =~ /yum|zypper/ and ($gpgkey_source and $gpgkey_keyid) {
