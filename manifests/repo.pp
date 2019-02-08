@@ -46,7 +46,8 @@ define swrepo::repo (
     $baseurl_real = $baseurl
   }
 
-  $enabled_num = bool2num(str2bool("${enabled}")) # lint:ignore:only_variable_string
+  $enabled_bool = str2bool("${enabled}") # lint:ignore:only_variable_string
+  $enabled_num  = bool2num($enabled_bool)
 
   if $::osfamily == 'Debian' {
     if $gpgkey_keyid != undef and $gpgkey_source != undef {
@@ -54,11 +55,7 @@ define swrepo::repo (
     } else {
       $gpgkey_hash = undef
     }
-    if $enabled_num == 1 {
-      $enabled_real = 'present'
-    } else {
-      $enabled_real = 'absent'
-    }
+    $enabled_real = bool2str($enabled_bool, 'present', 'absent')
   } else {
     $enabled_real = $enabled_num
   }
