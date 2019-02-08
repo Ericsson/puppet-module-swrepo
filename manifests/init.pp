@@ -31,10 +31,10 @@ class swrepo (
     $repos_hiera_merge_real = $repos_hiera_merge_bool
   }
 
-  $apt_setting_hiera_merge_real = str2bool($apt_setting_hiera_merge)
-  validate_bool($apt_setting_hiera_merge_real)
-  $config_dir_purge_real = str2bool($config_dir_purge)
-  validate_bool($config_dir_purge_real)
+  $apt_setting_hiera_merge_bool = str2bool($apt_setting_hiera_merge)
+  validate_bool($apt_setting_hiera_merge_bool)
+  $config_dir_purge_bool = str2bool($config_dir_purge)
+  validate_bool($config_dir_purge_bool)
 
   if $config_dir_name and is_string($config_dir_name) == false {
     fail('swrepo::config_dir_name is not a string')
@@ -48,7 +48,7 @@ class swrepo (
     'RedHat': {
       $repotype_default = 'yum'
       $config_dir_name_real = '/etc/yum.repos.d'
-      if $config_dir_purge_real == true {
+      if $config_dir_purge_bool == true {
         file { "${config_dir_name_real}/redhat.repo":
           require => File[$config_dir_name_real],
         }
@@ -69,11 +69,11 @@ class swrepo (
   }
 
   # Manage repo directory
-  if $config_dir_purge_real == true and $config_dir_name_real != undef {
+  if $config_dir_purge_bool == true and $config_dir_name_real != undef {
     file { $config_dir_name_real:
       ensure  => directory,
-      recurse => $config_dir_purge_real,
-      purge   => $config_dir_purge_real,
+      recurse => $config_dir_purge_bool,
+      purge   => $config_dir_purge_bool,
     }
   }
 
@@ -85,7 +85,7 @@ class swrepo (
   $defaults = {
     repotype          => $repotype_real,
     config_dir        => $config_dir_name_real,
-    config_dir_purge  => $config_dir_purge_real,
+    config_dir_purge  => $config_dir_purge_bool,
   }
 
   if $repos != undef {
@@ -99,7 +99,7 @@ class swrepo (
   }
 
   if $apt_setting != undef {
-    if $apt_setting_hiera_merge_real == true {
+    if $apt_setting_hiera_merge_bool == true {
       $apt_setting_real = hiera_hash('swrepo::apt_setting')
     } else {
       $apt_setting_real = $apt_setting
