@@ -30,7 +30,7 @@ define swrepo::repo (
   if is_string($repotype) == false { fail('swrepo::repo::repotype is not a string.') }
   validate_re($repotype, '^(apt|yum|zypper)$', 'swrepo::repo::repotype is invalid. Supported values are apt, yum and zypper.')
 
-  if is_string($apt_repos) == false { fail('swrepo::repo::repos is not a string.') }
+  if is_string($apt_repos) == false { fail('swrepo::repo::apt_repos is not a string.') }
 
   if $autorefresh == undef {
     $autorefresh_num = undef
