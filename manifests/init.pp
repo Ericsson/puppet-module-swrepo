@@ -72,8 +72,8 @@ class swrepo (
   if $config_dir_purge_bool == true and $config_dir_name_real != undef {
     file { $config_dir_name_real:
       ensure  => directory,
-      recurse => $config_dir_purge_bool,
-      purge   => $config_dir_purge_bool,
+      recurse => true,
+      purge   => true,
     }
   }
 
