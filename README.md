@@ -28,14 +28,21 @@ has also been tested on Puppet 4, 5 and 6.
 * EL 5
 * Suse 11
 * Suse 12
+* Ubuntu 16.04
+* Ubuntu 18.04
 
 ## Dependencies
-This module uses the custom types [zypprepo](https://github.com/voxpupuli/puppet-zypprepo) and [rpmkey](https://github.com/stschulte/puppet-rpmkey) as dependencies.
+This module uses the custom types [apt](https://github.com/puppetlabs/puppetlabs-apt), [zypprepo](https://github.com/voxpupuli/puppet-zypprepo) and [rpmkey](https://github.com/stschulte/puppet-rpmkey) as dependencies.
 
 Please ensure that both of these modules are available in your setup:
 
+* https://github.com/puppetlabs/puppetlabs-apt
 * https://github.com/voxpupuli/puppet-zypprepo
 * https://github.com/stschulte/puppet-rpmkey
+
+When using Puppetv6 [yumrepo_core](https://github.com/puppetlabs/puppetlabs-yumrepo_core) is also required.
+
+* https://github.com/puppetlabs/puppetlabs-yumrepo_core
 
 # Class Descriptions
 ## Class `swrepo`
@@ -43,7 +50,7 @@ Please ensure that both of these modules are available in your setup:
 The `swrepo` class is used to prepare and pass data to the `swrepo::repo` define.
 The module will stay passive when no repositories are specified to it.
 
-It will set the repository type (yum or zypper) accordingly to the OS family running on.
+It will set the repository type (apt, yum or zypper) accordingly to the OS family running on.
 It will also allow you to merge hiera data through all levels. This is useful for specifying
 repositories at different levels of the hierarchy and having them all included in the catalog.
 
@@ -51,10 +58,12 @@ repositories at different levels of the hierarchy and having them all included i
 
 ---
 #### repotype (string / optional)
-Type of repository type to configure. Valid values are 'yum' and 'zypper'.
+Type of repository type to configure. Valid values are 'apt', 'yum' and 'zypper'.
 If not specified (undef) it will set the repotype accordingly to the running OS family.
 
-- Default: ***undef*** (uses 'yum' for RHEL and 'zypper' for Suse)
+NOTE: 'apt' only works for osfamily Debian because of limitation of the apt module.
+
+- Default: ***undef*** (uses 'apt' for Debian, 'yum' for RHEL and 'zypper' for Suse)
 
 ---
 #### repos (hash / optional)
@@ -75,11 +84,49 @@ swrepo::repos:
 *The above will add two repositories: repo1 with defaults and repo2 with autorefresh and priority parameters changed.*
 
 ---
-#### hiera_merge (boolean / optional)
+#### repos_hiera_merge (boolean / optional)
 Trigger to control merges of all found instances of repositories in Hiera. This is useful for specifying repositories resources at different levels of the hierarchy and having them all included in the catalog.
 
 - Default: ***false***
+
 ---
+#### hiera_merge (boolean / optional)
+Trigger to control merges of all found instances of repositories in Hiera. This is useful for specifying repositories resources at different levels of the hierarchy and having them all included in the catalog.
+
+NOTE: This parameter is being deprecated in favour of repos_hiera_merge
+
+- Default: ***undef***
+
+---
+#### config_dir_name (string / optional)
+Can be used if you want to manage a different directory for repositories.
+
+- Default: ***undef*** but defaults to default repository directory based on OS.
+
+---
+#### config_dir_purge (boolean / optional)
+When enabled, non-managed files in $config_dir_name will be purged.
+
+#- Default: ***false***
+
+---
+#### apt_setting (hash / optional)
+Hash of apt settings to configure. This hash will be passed to [apt::setting](#defined-type-aptsetting) define via create_resources.
+
+- Default: ***undef***
+
+##### Example:
+```yaml
+swrepo::apt_setting:
+  conf-httpproxy:
+    content: Acquire::http::proxy "http://proxy.hieradomain.tld:8080";
+```
+
+---
+#### apt_setting_hiera_merge (boolean / optional)
+Trigger to control merges of all found instances of apt_setting in Hiera. This is useful for specifying repositories resources at different levels of the hierarchy and having them all included in the catalog.
+
+- Default: ***false***
 
 # Define Descriptions
 ## Defined type `swrepo::repo`
@@ -182,6 +229,20 @@ Specify the ```type``` parameter. Valid values are 'yum', 'yast2', 'rpm-md', and
 **Hint**: only used for zypper, ignored on yum
 
 - Default: ***undef***
+
+---
+#### apt_repos (string / optional)
+Specify the ```apt_repos``` parameter. It's only used for repotype 'apt' and
+is passed as 'repos' to define 'apt'
+
+**Hint**: only used for apt, ignored on yum and zypper
+
+---
+#### apt_release (string / optional)
+Specify the ```apt_release``` parameter. It's only used for repotype 'apt' and
+is passed as 'release' to define 'apt'. Defaults to your current OS release.
+
+**Hint**: only used for apt, ignored on yum and zypper
 
 ---
 

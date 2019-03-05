@@ -8,7 +8,8 @@ end
 
 gem 'facter', '>= 1.7.0'
 gem 'puppet-lint', '~> 2.0'
-gem 'puppet-lint-absolute_classname-check'
+gem 'puppet-lint-absolute_classname-check',           '~> 0.2' if RUBY_VERSION < '1.9'
+gem 'puppet-lint-absolute_classname-check',           '~> 1.0' if RUBY_VERSION >= '1.9'
 gem 'puppet-lint-alias-check'
 gem 'puppet-lint-empty_string-check'
 gem 'puppet-lint-file_ensure-check'
