@@ -248,6 +248,7 @@ is passed as 'release' to define 'apt'. Defaults to your current OS release.
 
 # Changelog
 
+* 2.1.0 Add Ubuntu and purging repository directories from unmanaged files
 * 2.0.0 Adds support for Puppet 5 & 6
         Copied dependencies have been removed. It is needed to include stschulte/puppet-rpmkey and voxpupuli/puppet-zypprepo manually instead.
 * 1.0.0 First stable release
