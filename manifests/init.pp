@@ -20,7 +20,7 @@ class swrepo (
     notify { '*** DEPRECATION WARNING***: Using $hiera_merge is deprecated. Please use $repos_hiera_merge instead!': }
     $hiera_merge_bool = str2bool($hiera_merge)
     validate_bool($hiera_merge_bool)
-    if $repos_hiera_merge_bool != $hiera_merge_bool {
+    if $repos_hiera_merge != undef and $repos_hiera_merge_bool != $hiera_merge_bool {
       fail("Different values for \$repos_hiera_merge (${repos_hiera_merge}) and \$hiera_merge (${hiera_merge}). Please use only one.")
     } else {
       $repos_hiera_merge_real = $hiera_merge_bool
