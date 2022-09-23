@@ -69,6 +69,8 @@ describe 'swrepo' do
 
   # ensure that the class is passive by default
   describe 'when all parameters are unset (unsing module defaults)' do
+    let(:facts) { { :osfamily => 'RedHat' } }
+
     it { should compile.with_all_deps }
     it { should contain_class('swrepo') }
     it { should have_resource_count(0) }
@@ -78,7 +80,9 @@ describe 'swrepo' do
   # apt module only works on osfamily Debian. Not including.
   %w(yum zypper).each do | repotype|
     describe "when repotype is set to the valid string #{repotype}" do
+      let(:facts) { { :osfamily => 'RedHat' } }
       let(:params) { { :repotype => repotype } }
+
       it { should have_swrepo__repo_resource_count(0) }
 
       supported_os_families.sort.each do |os, facts|
