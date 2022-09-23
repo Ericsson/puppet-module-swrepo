@@ -7,10 +7,22 @@
   "source": "https://github.com/kodguru/puppet-module-swrepo.git",
   "project_page": "https://github.com/kodguru/puppet-module-swrepo",
   "issues_url": "https://github.com/kodguru/puppet-module-swrepo/issues",
-  "requirements": [
+  "dependencies": [
     {
-      "name": "puppet",
-      "version_requirement": ">= 3.0.0 < 7.0.0"
+      "name": "puppetlabs/stdlib",
+      "version_requirement": ">= 4.10.0 < 6.0.0"
+    },
+    {
+      "name": "voxpupuli/zypprepo",
+      "version_requirement": ">=1.0.0 < 3.0.0"
+    },
+    {
+      "name": "stschulte/rpmkey",
+      "version_requirement": ">=1.0.0 < 2.0.0"
+    },
+    {
+      "name": "puppetlabs/yumrepo",
+      "version_requirement": ">= 1.0.0 < 2.0.0"
     }
   ],
   "operatingsystem_support": [
@@ -61,10 +73,13 @@
       ]
     }
   ],
-  "dependencies": [
-    {"name":"puppetlabs/stdlib","version_requirement":">= 4.10.0 < 6.0.0"},
-    {"name":"voxpupuli/zypprepo","version_requirement":">=1.0.0 < 3.0.0"},
-    {"name":"stschulte/rpmkey","version_requirement":">=1.0.0 < 2.0.0"},
-    {"name":"puppetlabs/yumrepo","version_requirement":">= 1.0.0 < 2.0.0"}
-  ]
+  "requirements": [
+    {
+      "name": "puppet",
+      "version_requirement": ">= 3.0.0 < 7.0.0"
+    }
+  ],
+  "pdk-version": "2.5.0",
+  "template-url": "pdk-default#2.5.0",
+  "template-ref": "tags/2.5.0-0-g369d483"
 }
