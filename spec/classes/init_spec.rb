@@ -1,9 +1,14 @@
 require 'spec_helper'
 describe 'swrepo' do
   supported_os_families = {
-    'RedHat'  =>
+    'RedHat' =>
       {
-        os:              'RedHat',
+        os: {
+          family: 'RedHat',
+          release: {
+            full: '7.4',
+          },
+        },
         osrelease:       '7.4',
         repotype:        'yum',
         lsbdistid:       nil,
@@ -12,7 +17,12 @@ describe 'swrepo' do
       },
     'Suse-11' =>
       {
-        os:              'Suse',
+        os: {
+          family: 'Suse',
+          release: {
+            full: '11.1',
+          },
+        },
         osrelease:       '11.1',
         repotype:        'zypper',
         lsbdistid:       nil,
@@ -21,7 +31,12 @@ describe 'swrepo' do
       },
     'Suse-12' =>
       {
-        os:              'Suse',
+        os: {
+          family: 'Suse',
+          release: {
+            full: '12.2',
+          },
+        },
         osrelease:       '12.2',
         repotype:        'zypper',
         lsbdistid:       nil,
@@ -38,7 +53,12 @@ describe 'swrepo' do
     #   },
     'Ubuntu' =>
       {
-        os:              'Debian',
+        os: {
+          family: 'Debian',
+          release: {
+            full: '16.04',
+          },
+        },
         osrelease:       '16.04',
         repotype:        'apt',
         lsbdistid:       'Ubuntu',
@@ -48,8 +68,26 @@ describe 'swrepo' do
   }
 
   unsupported_os_families = {
-    'Suse-10' => { os: 'Suse',    osrelease: '10.0', repotype: nil, lsbdistid: nil },
-    'Unknown' => { os: 'Unknown', osrelease: '2.42', repotype: nil, lsbdistid: nil },
+    'Suse-10' => {
+      os: {
+        family: 'Suse',
+        release: {
+          full: '10.0'
+        },
+      },
+      repotype: nil,
+      lsbdistid: nil,
+    },
+    'Unknown' => {
+      os: {
+        family: 'Unknown',
+        release: {
+          full: '2.42'
+        },
+      },
+      repotype: nil,
+      lsbdistid: nil,
+    },
   }
 
   repos_hash = {
@@ -68,7 +106,7 @@ describe 'swrepo' do
 
   # ensure that the class is passive by default
   describe 'when all parameters are unset (unsing module defaults)' do
-    let(:facts) { { osfamily: 'RedHat' } }
+    let(:facts) { { os: { family: 'RedHat' } } }
 
     it { is_expected.to compile.with_all_deps }
     it { is_expected.to contain_class('swrepo') }
@@ -79,7 +117,7 @@ describe 'swrepo' do
   # apt module only works on osfamily Debian. Not including.
   ['yum', 'zypper'].each do |repotype|
     describe "when repotype is set to the valid string #{repotype}" do
-      let(:facts) { { osfamily: 'RedHat' } }
+      let(:facts) { { os: { family: 'RedHat' } } }
       let(:params) { { repotype: repotype } }
 
       it { is_expected.to have_swrepo__repo_resource_count(0) }
@@ -88,7 +126,13 @@ describe 'swrepo' do
         context "with repos set to a valid hash on supported #{os}" do
           let(:facts) do
             {
-              osfamily:               facts[:os],
+              os: {
+                family:               facts[:os][:family],
+                release: {
+                  full:               facts[:os][:release][:full],
+                },
+              },
+              osfamily:               facts[:os][:family],
               operatingsystemrelease: facts[:osrelease],
               lsbdistid:              facts[:lsbdistid],
               lsbdistcodename:        facts[:lsbdistcodename],
@@ -117,14 +161,20 @@ describe 'swrepo' do
       context "and osfamily is #{facts[:os]} and repos and apt_setting set" do
         let(:facts) do
           {
-            osfamily:               facts[:os],
+            os: {
+              family:               facts[:os][:family],
+              release: {
+                full:               facts[:os][:release][:full],
+              },
+            },
+            osfamily:               facts[:os][:family],
             operatingsystemrelease: facts[:osrelease],
             lsbdistid:              facts[:lsbdistid],
             lsbdistcodename:        facts[:lsbdistcodename],
           }
         end
 
-        if facts[:os] == 'Debian'
+        if facts[:os][:family] == 'Debian'
           it { compile.with_all_deps }
           it { is_expected.to have_swrepo__repo_resource_count(2) }
           # 2 repositories, 2 settings and 1 extra (default file created)
@@ -143,7 +193,13 @@ describe 'swrepo' do
     describe "when repos is set to a valid hash on supported #{os}" do
       let(:facts) do
         {
-          osfamily:               facts[:os],
+          os: {
+            family:               facts[:os][:family],
+            release: {
+              full:               facts[:os][:release][:full],
+            },
+          },
+          osfamily:               facts[:os][:family],
           operatingsystemrelease: facts[:osrelease],
           lsbdistid:              facts[:lsbdistid],
           lsbdistcodename:        facts[:lsbdistcodename],
@@ -158,7 +214,13 @@ describe 'swrepo' do
     describe 'when config_dir_name is not set and config_dir_purge is true' do
       let(:facts) do
         {
-          osfamily:               facts[:os],
+          os: {
+            family:               facts[:os][:family],
+            release: {
+              full:               facts[:os][:release][:full],
+            },
+          },
+          osfamily:               facts[:os][:family],
           operatingsystemrelease: facts[:osrelease],
           lsbdistid:              facts[:lsbdistid],
           lsbdistcodename:        facts[:lsbdistcodename],
@@ -172,7 +234,7 @@ describe 'swrepo' do
       end
 
       it { compile.with_all_deps }
-      unless facts[:os] == 'Debian'
+      unless facts[:os][:family] == 'Debian'
         it do
           is_expected.to contain_file(facts[:config_file]).with(
             {
@@ -215,6 +277,12 @@ describe 'swrepo' do
     describe 'for repos' do
       let(:facts) do
         {
+          os: {
+            family: 'RedHat',
+            release: {
+              full: '7.4',
+            },
+          },
           fqdn:   'swrepo.example.local',
           common: 'common',
         }
@@ -277,6 +345,12 @@ describe 'swrepo' do
     describe 'for apt_setting' do
       let(:facts) do
         {
+          os: {
+            family:               'Debian',
+            release: {
+              full:               '16.04',
+            },
+          },
           fqdn:            'swrepoapt.example.local',
           osfamily:        'Debian',
           osrelease:       '16.04',
@@ -331,8 +405,12 @@ describe 'swrepo' do
     describe "when running on unsupported #{os}" do
       let(:facts) do
         {
-          osfamily:               facts[:os],
-          operatingsystemrelease: facts[:osrelease],
+          os: {
+            family:               facts[:os][:family],
+            release: {
+              full:               facts[:os][:release][:full],
+            },
+          },
         }
       end
 
@@ -344,48 +422,70 @@ describe 'swrepo' do
 
   # ensure parameters only takes intended data types
   describe 'variable type and content validations' do
+    let(:facts) { { os: { family: 'RedHat', release: { full: '7.4' } } } }
+
     mandatory_params = {}
     validations = {
-      'boolean' => {
-        name:     ['apt_setting_hiera_merge', 'config_dir_purge', 'repos_hiera_merge'],
-        valid:    [true, 'false'],
-        invalid:  ['string', ['array'], { 'ha' => 'sh' }, 3, 2.42, nil],
-        message:  'str2bool',
+      'Boolean' => {
+        name:    ['config_dir_purge', 'apt_setting_hiera_merge'],
+        valid:   [true, false],
+        invalid: ['false', ['array'], { 'ha' => 'sh' }, 3, 2.42, nil],
+        message: 'expects a Boolean value',
+      },
+      'Optional[Boolean]' => {
+        name:    ['repos_hiera_merge'],
+        valid:   [true, false],
+        invalid: ['false', ['array'], { 'ha' => 'sh' }, 3, 2.42, nil],
+        message: 'expects a value of type Undef or Boolean',
       },
       # hiera_merge will be deprecated and needs to be equal to repos_hiera_merge until then
-      'boolean (hiera_merge = false)' => {
-        name:     ['hiera_merge'],
-        valid:    [false, 'false'],
-        params:   { repos_hiera_merge: false },
-        invalid:  [], # will be tested in the next case
-        message:  'str2bool',
+      'Optional[Boolean] hiera_merge specific - repos_hiera_merge = false' => {
+        name:    ['hiera_merge'],
+        valid:   [false],
+        params:  { repos_hiera_merge: false },
+        invalid: [],
+        message: 'expects a value of type Undef or Hash',
       },
       # hiera_merge will be deprecated and needs to be equal to repos_hiera_merge until then
-      'boolean (hiera_merge = true)' => {
-        name:     ['hiera_merge'],
-        valid:    [true, 'true'],
-        params:   { repos_hiera_merge: true },
-        invalid:  ['string', ['array'], { 'ha' => 'sh' }, 3, 2.42, nil],
-        message:  'str2bool',
+      'Optional[Boolean] hiera_merge specific - repos_hiera_merge = true' => {
+        name:    ['hiera_merge'],
+        valid:   [true],
+        params:  { repos_hiera_merge: true },
+        invalid: [],
+        message: 'Different values for $repos_hiera_merge (false) and $hiera_merge (true). Please use only one',
       },
-      'hash-repos' => {
-        name:     ['repos'],
-        valid:    [], # valid hashes are to complex to block test them here.
-        invalid:  ['string', ['array'], 3, 2.42, true],
-        message:  'is not a Hash',
+      # hiera_merge will be deprecated and needs to be equal to repos_hiera_merge until then
+      'Optional[Boolean] hiera_merge specific - invalids' => {
+        name:    ['hiera_merge'],
+        valid:   [true],
+        params:  { repos_hiera_merge: true },
+        invalid: ['false', ['array'], { 'ha' => 'sh' }, 3, 2.42, nil],
+        message: 'expects a value of type Undef or Boolean',
       },
-      'hash-apt_setting' => {
-        name:     ['apt_setting'],
-        valid:    [], # valid hashes are to complex to block test them here.
-        invalid:  ['string', ['array'], 3, 2.42, true],
-        message:  'is not a Hash',
-        facts:    { osfamily: 'Debian', osrelease: '16.04', lsbdistid: 'Ubuntu', lsbdistcodename: 'xenial' }
+      'Optional[Hash]' => {
+        name:    ['repos'],
+        valid:   [], # valid hashes are to complex to block test them here.
+        invalid: ['string', ['array'], 3, 2.42, true],
+        message: 'expects a value of type Undef or Hash',
       },
-      'string' => {
-        name:     ['repotype', 'config_dir_name'],
-        valid:    ['string'],
-        invalid:  [['array'], { 'ha' => 'sh' }, 3, 2.42, true],
-        message:  'is not a string',
+      'Optional[Stdlib::Absolutepath]' => {
+        name:    ['config_dir_name'],
+        valid:   ['/absolute/filepath', '/absolute/directory/'], # cant test undef :(
+        invalid: ['relative/path', 3, 2.42, ['array'], { 'ha' => 'sh' }],
+        message: 'expects a Stdlib::Absolutepath',
+      },
+      'Optional[String[1]]' => {
+        name:    ['repotype'],
+        valid:   ['string'],
+        invalid: [['array'], { 'ha' => 'sh' }, 3, 2.42, true],
+        message: 'expects a value of type Undef or String',
+      },
+      'Optional[Hash] apt_setting specific' => {
+        name:    ['apt_setting'],
+        valid:   [], # valid hashes are to complex to block test them here.
+        invalid: ['string', ['array'], 3, 2.42, true],
+        message: 'expects a value of type Undef or Hash',
+        facts:   { osfamily: 'Debian', osrelease: '16.04', lsbdistid: 'Ubuntu', lsbdistcodename: 'xenial' }
       },
     }
 

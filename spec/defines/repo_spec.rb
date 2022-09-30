@@ -110,17 +110,6 @@ describe 'swrepo::repo' do
         end
       end
 
-      # ensure backward compatibility for migration only
-      context 'when autorefresh is set to valid string 1' do
-        let(:params) { default_params.merge({ autorefresh: '1' }) }
-
-        if repotype == 'yum'
-          it { is_expected.to contain_yumrepo('spectest-repo').without_autorefresh }
-        else
-          it { is_expected.to contain_zypprepo('spectest-repo').with_autorefresh('1') }
-        end
-      end
-
       context 'when descr is set to valid string custom-repo' do
         let(:params) { default_params.merge({ descr: 'custom-repo' }) }
 
@@ -159,17 +148,6 @@ describe 'swrepo::repo' do
         end
       end
 
-      # ensure backward compatibility for migration only
-      context 'when enabled is set to valid string 0' do
-        let(:params) { default_params.merge({ enabled: '0' }) }
-
-        if repotype == 'yum'
-          it { is_expected.to contain_yumrepo('spectest-repo').with_enabled('0') }
-        else
-          it { is_expected.to contain_zypprepo('spectest-repo').with_enabled('0') }
-        end
-      end
-
       context 'when exclude is set to valid string not_me' do
         let(:params) { default_params.merge({ exclude: 'not_me' }) }
 
@@ -183,17 +161,6 @@ describe 'swrepo::repo' do
       # ensure bool2str functionality
       context 'when gpgcheck is set to valid boolean true' do
         let(:params) { default_params.merge({ gpgcheck: true }) }
-
-        if repotype == 'yum'
-          it { is_expected.to contain_yumrepo('spectest-repo').with_gpgcheck('1') }
-        else
-          it { is_expected.to contain_zypprepo('spectest-repo').with_gpgcheck('1') }
-        end
-      end
-
-      # ensure backward compatibility for migration only
-      context 'when gpgcheck is set to valid string 1' do
-        let(:params) { default_params.merge({ gpgcheck: '1' }) }
 
         if repotype == 'yum'
           it { is_expected.to contain_yumrepo('spectest-repo').with_gpgcheck('1') }
@@ -223,30 +190,8 @@ describe 'swrepo::repo' do
         end
       end
 
-      # ensure backward compatibility for migration only
-      context 'when keeppackages is set to valid string 1' do
-        let(:params) { default_params.merge({ keeppackages: '1' }) }
-
-        if repotype == 'yum'
-          it { is_expected.to contain_yumrepo('spectest-repo').without_keeppackages }
-        else
-          it { is_expected.to contain_zypprepo('spectest-repo').with_keeppackages('1') }
-        end
-      end
-
       context 'when priority is set to valid integer 42' do
         let(:params) { default_params.merge({ priority: 42 }) }
-
-        if repotype == 'yum'
-          it { is_expected.to contain_yumrepo('spectest-repo').with_priority('42') }
-        else
-          it { is_expected.to contain_zypprepo('spectest-repo').with_priority('42') }
-        end
-      end
-
-      # ensure backward compatibility for migration only
-      context 'when priority is set to valid string 42' do
-        let(:params) { default_params.merge({ priority: '42' }) }
 
         if repotype == 'yum'
           it { is_expected.to contain_yumrepo('spectest-repo').with_priority('42') }
@@ -315,49 +260,55 @@ describe 'swrepo::repo' do
 
   describe 'variable type and content validations' do
     validations = {
-      'boolean & stringified bools' => {
-        name:     ['autorefresh', 'downcase_baseurl', 'enabled', 'gpgcheck', 'keeppackages'],
-        valid:    [true, 'false', '1', 0], # support for stringified booleans is for backward compatibility only
+      'Boolean' => {
+        name:     ['downcase_baseurl', 'enabled'],
+        valid:    [true, false],
         invalid:  ['string', ['array'], { 'ha' => 'sh' }, 3, 2.42, nil],
-        message:  '(is not a boolean|str2bool)',
+        message:  'expects a Boolean value',
+      },
+      'Optional[Boolean]' => {
+        name:     ['autorefresh', 'gpgcheck', 'keeppackages'],
+        valid:    [true, false],
+        invalid:  ['string', ['array'], { 'ha' => 'sh' }, 3, 2.42, nil],
+        message:  'expects a value of type Undef or Boolean',
       },
       # ensure it only takes integers between 1 and 99
-      'integer 1..99' => {
+      'Optional[Integer[1,99]]' => {
         name:     ['priority'],
         valid:    [1, 99],
         invalid:  [0, 100, 'string', ['array'], { 'ha' => 'sh' }, 2.42, true, nil],
-        message:  '(is not an integer|is not a number|validate_integer)',
+        message:  'expects a value of type Undef or Integer',
       },
-      'regex for URLs' => {
+      'Stdlib::HTTPUrl' => {
         name:     ['baseurl', 'gpgkey_source', 'proxy'],
         valid:    ['http://spec.test/repo', 'https://te.st/ing/'],
         invalid:  [['array'], { 'ha' => 'sh' }, 3, 2.42, true, nil],
-        message:  '(is not a string|is not an URL)',
+        message:  'expects a match for Stdlib::HTTPUrl',
       },
-      'regex for repotype' => {
+      'Enum[apt, yum, zypper]' => {
         name:     ['repotype'],
-        valid:    ['yum', 'zypper'],
+        valid:    ['yum', 'zypper'], # TODO: test apt under Debian/Ubuntu
         invalid:  ['string', ['array'], { 'ha' => 'sh' }, 3, 2.42, true, nil],
-        message:  '(is not a string|repotype is invalid)',
+        message:  'expects a match for Enum',
       },
-      'regex for type' => {
+      'Optional[Enum[yum, yast2, rpm-md, plaindir]]' => {
         name:     ['type'],
         valid:    ['yum', 'yast2', 'rpm-md', 'plaindir'],
         invalid:  ['string', ['array'], { 'ha' => 'sh' }, 3, 2.42, true, nil],
-        message:  '(is not a string|type is invalid)',
+        message:  'match for Enum', # expects a match for Enum',
       },
-      'string' => {
+      'Optional[String[1]]' => {
         name:     ['descr', 'exclude'],
         valid:    ['string', nil],
-        invalid:  [['array'], { 'ha' => 'sh' }, 3, 2.42, true],
-        message:  'is not a string',
+        invalid:  ['', ['array'], { 'ha' => 'sh' }, 3, 2.42, true],
+        message:  'expects a value of type Undef or String',
       },
-      'string (HEX)' => {
+      'Optional[String[1]] for gpgkey_keyid' => {
         name:     ['gpgkey_keyid'],
         params:   { gpgkey_source: 'http://spec.test/repo' }, # mandatory for gpgkey_keyid usage
         valid:    ['DEADC0DE'],
         invalid:  [['array'], { 'ha' => 'sh' }, 3, 2.42, true],
-        message:  'is not a string',
+        message:  'expects a value of type Undef or String',
       },
     }
 
