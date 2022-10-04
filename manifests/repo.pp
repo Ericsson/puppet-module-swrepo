@@ -78,50 +78,16 @@ define swrepo::repo (
   Optional[Boolean]                                    $config_dir_purge = undef,
 ) {
   # variable validations
-  if is_string($apt_repos) == false { fail('swrepo::repo::apt_repos is not a string.') }
-  if is_string($descr) == false { fail('swrepo::repo::descr is not a string.') }
-  if $exclude != undef and is_string($exclude) == false { fail('swrepo::repo::exclude is not a string.') }
-  if $gpgkey_keyid != undef and is_string($gpgkey_keyid) == false { fail('swrepo::repo::gpgkey_keyid is not a string.') }
   if $gpgkey_keyid != undef and $gpgkey_source == undef { fail('swrepo::repo::gpgkey_keyid is specified but swrepo::repo::gpgkey_source is missing.') } #lint:ignore:140chars
 
-  if is_string($baseurl) == false { fail('swrepo::repo::baseurl is not a string.') }
-  validate_re($baseurl,  '^https?:\/\/[\S]+$', 'swrepo::repo::baseurl is not an URL.')
-
-  if is_string($repotype) == false { fail('swrepo::repo::repotype is not a string.') }
-  validate_re($repotype, '^(apt|yum|zypper)$', 'swrepo::repo::repotype is invalid. Supported values are apt, yum and zypper.')
-
-  if $proxy != undef {
-    if is_string($proxy) == false { fail('swrepo::repo::proxy is not a string.') }
-    validate_re($proxy, '^https?:\/\/[\S]+$', 'swrepo::repo::proxy is not an URL.')
-  }
-
-  if $type != undef {
-    if is_string($type) == false { fail('swrepo::repo::type is not a string.') }
-    validate_re($type, '^(yum|yast2|rpm-md|plaindir)$', 'swrepo::repo::type is invalid. Supported values are yum, yast2, rpm-md, and plaindir.') #lint:ignore:140chars
-  }
-
-  if $gpgkey_source != undef {
-    if is_string($gpgkey_source) == false { fail('swrepo::repo::gpgkey_source is not a string.') }
-    validate_re($gpgkey_source, '^https?:\/\/[\S]+$', 'swrepo::repo::gpgkey_source is not an URL.')
-  }
-
-  if $priority != undef {
-    if is_integer($priority) == false { fail('swrepo::repo::priority is not an integer.') }
-    validate_integer(0 + $priority, 99, 1) # convert stringified values to integer and test range
-  }
-
   # variable preparations
-  $enabled_bool = str2bool("${enabled}") # lint:ignore:only_variable_string
-  $enabled_num  = bool2num($enabled_bool)
-  $enabled_str  = bool2str($enabled_bool, 'present', 'absent')
-
   if $autorefresh == undef {
     $autorefresh_num = undef
   } else {
-    $autorefresh_num = bool2num(str2bool("${autorefresh}")) # lint:ignore:only_variable_string
+    $autorefresh_num = bool2num(str2bool($autorefresh))
   }
 
-  if str2bool("${downcase_baseurl}") { # lint:ignore:only_variable_string
+  if $downcase_baseurl == true {
     $baseurl_real = downcase($baseurl)
   } else {
     $baseurl_real = $baseurl
@@ -136,13 +102,13 @@ define swrepo::repo (
   if $gpgcheck == undef {
     $gpgcheck_num = undef
   } else {
-    $gpgcheck_num = bool2num(str2bool("${gpgcheck}")) # lint:ignore:only_variable_string
+    $gpgcheck_num = bool2num(str2bool($gpgcheck))
   }
 
   if $keeppackages == undef {
     $keeppackages_num = undef
   } else {
-    $keeppackages_num = bool2num(str2bool("${keeppackages}")) # lint:ignore:only_variable_string
+    $keeppackages_num = bool2num(str2bool($keeppackages))
   }
 
   if $priority == undef {
@@ -157,7 +123,7 @@ define swrepo::repo (
       yumrepo { $name:
         baseurl  => $baseurl_real,
         descr    => $descr,
-        enabled  => $enabled_num,
+        enabled  => bool2num($enabled),
         gpgcheck => $gpgcheck_num,
         gpgkey   => $gpgkey_source,
         priority => $priority_num,
@@ -169,7 +135,7 @@ define swrepo::repo (
       zypprepo { $name:
         baseurl      => $baseurl_real,
         descr        => $descr,
-        enabled      => $enabled_num,
+        enabled      => bool2num($enabled),
         gpgcheck     => $gpgcheck_num,
         gpgkey       => $gpgkey_source,
         priority     => $priority_num,
@@ -180,7 +146,7 @@ define swrepo::repo (
     }
     'apt': {
       apt::source { $name:
-        ensure         => $enabled_str,
+        ensure         => bool2str($enabled, 'present', 'absent'),
         location       => $baseurl_real,
         comment        => $descr,
         allow_unsigned => $gpgcheck_num,
