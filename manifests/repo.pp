@@ -1,80 +1,100 @@
-# == Define: swrepo::repo
+# The swrepo::repo definition is used to configure repositories.
+# You can also specify swrepo::repos from hiera as a hash of repositories and they will be created by the base class using create_resources.
 #
-# This define manages a repo instance
+# @param baseurl
+#   Specify the base URL for the repository.
+#
+# @param repotype
+#   Specify the type of repository to configure. Valid values are 'yum' and 'zypper'.
+#
+# @param autorefresh
+#   Specify if autorefresh will be used. Hint: only used for zypper, ignored on yum.
+#
+# @param descr
+#   A human-readable description of the repository.
+#
+# @param downcase_baseurl
+#   Trigger if $baseurl should be converted to lowercase characters.
+#
+# @param enabled
+#   Specify if the repository will be used.
+#
+# @param exclude
+#   List of shell globs. Matching packages will never be considered in updates or installs for the repository.
+#
+# @param gpgcheck
+#   Specify if GPG signature checking will be used for packages from this repository.
+#
+# @param gpgkey_keyid
+#   KeyID for the GPG key to import. 8 char hex key in uppercase. When $gpgkey_source is not specified too, the module will fail.
+#
+# @param gpgkey_source
+#   URL pointing to the ASCII-armored GPG key file for the repository. When $gpgkey_keyid is not specified too,
+#   this will be ignored silently.
+#
+# @param keeppackages
+#   Specify if keeppackages will be used. Hint: only used for zypper, ignored on yum.
+#
+# @param priority
+#   Priority of this repository from 1-99. Requires that the priorities plugin is installed and enabled.
+#
+# @param proxy
+#   URL to the proxy server that should be used. Hint: only used for yum, ignored on zypper.
+#
+# @param type
+#   Specify the type parameter. Valid values are 'yum', 'yast2', 'rpm-md', and 'plaindir'. Hint: only used for zypper, ignored on yum.
+#
+# @param apt_repos
+#   Specify the apt_repos parameter. It is only used for repotype 'apt' and is passed as 'repos' to define 'apt'.
+#
+# @param apt_release
+#   Specify the apt_release parameter. It is only used for repotype 'apt' and is passed as 'release' to define 'apt'.
+#   Defaults to your current OS release. Hint: only used for apt, ignored on yum and zypper
+#
+# @param config_dir
+#   TODO: add documentation
+#
+# @param config_dir_purge
+#   TODO: add documentation
 #
 define swrepo::repo (
-  $baseurl,
-  $repotype,
-  $autorefresh      = undef,
-  $descr            = undef,
-  $downcase_baseurl = false,
-  $enabled          = true,
-  $exclude          = undef,
-  $gpgcheck         = undef,
-  $gpgkey_keyid     = undef,
-  $gpgkey_source    = undef,
-  $keeppackages     = undef,
-  $priority         = undef,
-  $proxy            = undef,
-  $type             = undef,
-  $apt_repos        = 'main',
-  $apt_release      = undef,
-  $config_dir       = undef,
-  $config_dir_purge = undef,
+  Stdlib::HTTPUrl                                      $baseurl,
+  Enum['apt', 'yum', 'zypper']                         $repotype,
+  Optional[Boolean]                                    $autorefresh      = undef,
+  Optional[String[1]]                                  $descr            = undef,
+  Boolean                                              $downcase_baseurl = false,
+  Boolean                                              $enabled          = true,
+  Optional[String[1]]                                  $exclude          = undef,
+  Optional[Boolean]                                    $gpgcheck         = undef,
+  Optional[String[1]]                                  $gpgkey_keyid     = undef,
+  Optional[Stdlib::HTTPUrl]                            $gpgkey_source    = undef,
+  Optional[Boolean]                                    $keeppackages     = undef,
+  Optional[Integer[1,99]]                              $priority         = undef,
+  Optional[Stdlib::HTTPUrl]                            $proxy            = undef,
+  Optional[Enum['yum', 'yast2', 'rpm-md', 'plaindir']] $type             = undef,
+  String[1]                                            $apt_repos        = 'main',
+  Optional[String[1]]                                  $apt_release      = undef,
+  Optional[Stdlib::Absolutepath]                       $config_dir       = undef,
+  Optional[Boolean]                                    $config_dir_purge = undef,
 ) {
-
   # variable validations
-  if is_string($apt_repos) == false { fail('swrepo::repo::apt_repos is not a string.') }
-  if is_string($descr) == false { fail('swrepo::repo::descr is not a string.') }
-  if $exclude != undef and is_string($exclude) == false { fail('swrepo::repo::exclude is not a string.') }
-  if $gpgkey_keyid != undef and is_string($gpgkey_keyid) == false { fail('swrepo::repo::gpgkey_keyid is not a string.') }
-  if $gpgkey_keyid != undef and $gpgkey_source == undef { fail('swrepo::repo::gpgkey_keyid is specified but swrepo::repo::gpgkey_source is missing.') }
-
-  if is_string($baseurl) == false { fail('swrepo::repo::baseurl is not a string.') }
-  validate_re($baseurl,  '^https?:\/\/[\S]+$', 'swrepo::repo::baseurl is not an URL.')
-
-  if is_string($repotype) == false { fail('swrepo::repo::repotype is not a string.') }
-  validate_re($repotype, '^(apt|yum|zypper)$', 'swrepo::repo::repotype is invalid. Supported values are apt, yum and zypper.')
-
-  if $proxy != undef {
-    if is_string($proxy) == false { fail('swrepo::repo::proxy is not a string.') }
-    validate_re($proxy, '^https?:\/\/[\S]+$', 'swrepo::repo::proxy is not an URL.')
-  }
-
-  if $type != undef {
-    if is_string($type) == false { fail('swrepo::repo::type is not a string.') }
-    validate_re($type, '^(yum|yast2|rpm-md|plaindir)$', 'swrepo::repo::type is invalid. Supported values are yum, yast2, rpm-md, and plaindir.')
-  }
-
-  if $gpgkey_source != undef {
-    if is_string($gpgkey_source) == false { fail('swrepo::repo::gpgkey_source is not a string.') }
-    validate_re($gpgkey_source, '^https?:\/\/[\S]+$', 'swrepo::repo::gpgkey_source is not an URL.')
-  }
-
-  if $priority != undef {
-    if is_integer($priority) == false { fail('swrepo::repo::priority is not an integer.') }
-    validate_integer(0 + $priority, 99, 1) # convert stringified values to integer and test range
-  }
+  if $gpgkey_keyid != undef and $gpgkey_source == undef { fail('swrepo::repo::gpgkey_keyid is specified but swrepo::repo::gpgkey_source is missing.') } #lint:ignore:140chars
 
   # variable preparations
-  $enabled_bool = str2bool("${enabled}") # lint:ignore:only_variable_string
-  $enabled_num  = bool2num($enabled_bool)
-  $enabled_str  = bool2str($enabled_bool, 'present', 'absent')
-
   if $autorefresh == undef {
     $autorefresh_num = undef
   } else {
-    $autorefresh_num = bool2num(str2bool("${autorefresh}")) # lint:ignore:only_variable_string
+    $autorefresh_num = bool2num(str2bool($autorefresh))
   }
 
-  if str2bool("${downcase_baseurl}") { # lint:ignore:only_variable_string
+  if $downcase_baseurl == true {
     $baseurl_real = downcase($baseurl)
   } else {
     $baseurl_real = $baseurl
   }
 
   if $gpgkey_keyid != undef and $gpgkey_source != undef {
-    $gpgkey_hash = {'id' => $gpgkey_keyid, 'source' => $gpgkey_source}
+    $gpgkey_hash = { 'id' => $gpgkey_keyid, 'source' => $gpgkey_source }
   } else {
     $gpgkey_hash = undef
   }
@@ -82,13 +102,13 @@ define swrepo::repo (
   if $gpgcheck == undef {
     $gpgcheck_num = undef
   } else {
-    $gpgcheck_num = bool2num(str2bool("${gpgcheck}")) # lint:ignore:only_variable_string
+    $gpgcheck_num = bool2num(str2bool($gpgcheck))
   }
 
   if $keeppackages == undef {
     $keeppackages_num = undef
   } else {
-    $keeppackages_num = bool2num(str2bool("${keeppackages}")) # lint:ignore:only_variable_string
+    $keeppackages_num = bool2num(str2bool($keeppackages))
   }
 
   if $priority == undef {
@@ -103,7 +123,7 @@ define swrepo::repo (
       yumrepo { $name:
         baseurl  => $baseurl_real,
         descr    => $descr,
-        enabled  => $enabled_num,
+        enabled  => bool2num($enabled),
         gpgcheck => $gpgcheck_num,
         gpgkey   => $gpgkey_source,
         priority => $priority_num,
@@ -115,7 +135,7 @@ define swrepo::repo (
       zypprepo { $name:
         baseurl      => $baseurl_real,
         descr        => $descr,
-        enabled      => $enabled_num,
+        enabled      => bool2num($enabled),
         gpgcheck     => $gpgcheck_num,
         gpgkey       => $gpgkey_source,
         priority     => $priority_num,
@@ -126,7 +146,7 @@ define swrepo::repo (
     }
     'apt': {
       apt::source { $name:
-        ensure         => $enabled_str,
+        ensure         => bool2str($enabled, 'present', 'absent'),
         location       => $baseurl_real,
         comment        => $descr,
         allow_unsigned => $gpgcheck_num,
