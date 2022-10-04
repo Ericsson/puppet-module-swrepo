@@ -1,5 +1,5 @@
 # @summary Class to manage swrepo
-# Managing software repositories (yum, zypper)
+# Managing software repositories (apt, yum, zypper)
 #
 # This module uses the custom types apt, zypprepo and rpmkey as dependencies.
 # Please ensure that both of these modules are available in your setup:
@@ -8,14 +8,10 @@
 #   https://github.com/voxpupuli/puppet-zypprepo
 #   https://github.com/stschulte/puppet-rpmkey
 #
-# When using Puppetv6 yumrepo_core is also required.
+# When using Puppet >= v6 yumrepo_core is also required.
 #
 #   https://github.com/puppetlabs/puppetlabs-yumrepo_core
 #
-# @example Hiera Example
-#
-#
-
 # @param repotype
 #   Type of repository type to configure. Valid values are 'apt', 'yum' and 'zypper'. If not specified (undef) it will
 #   set the repotype accordingly to the running OS family.
