@@ -288,22 +288,6 @@ describe 'swrepo' do
         }
       end
 
-      context 'when hiera_merge and repos_hiera_merge both are set' do
-        context 'and they have the same values' do
-          let(:params) { { repos_hiera_merge: true, hiera_merge: true } }
-
-          it { is_expected.to compile.with_all_deps }
-          it { is_expected.to contain_notify('*** DEPRECATION WARNING***: Using $hiera_merge is deprecated. Please use $repos_hiera_merge instead!') }
-        end
-        context 'and they have different values' do
-          let(:params) { { repos_hiera_merge: true, hiera_merge: false } }
-
-          it 'fail' do
-            expect { is_expected.to contain_class('swrepo') }.to raise_error(Puppet::Error, %r{Different values for \$repos_hiera_merge \(true\) and \$hiera_merge \(false\)})
-          end
-        end
-      end
-
       context 'when repos is unset' do
         context 'with repos_hiera_merge set to boolean false' do
           let(:params) { { repos_hiera_merge: false } }
@@ -427,40 +411,10 @@ describe 'swrepo' do
     mandatory_params = {}
     validations = {
       'Boolean' => {
-        name:    ['config_dir_purge', 'apt_setting_hiera_merge'],
+        name:    ['repos_hiera_merge', 'config_dir_purge', 'apt_setting_hiera_merge'],
         valid:   [true, false],
         invalid: ['false', ['array'], { 'ha' => 'sh' }, 3, 2.42, nil],
         message: 'expects a Boolean value',
-      },
-      'Optional[Boolean]' => {
-        name:    ['repos_hiera_merge'],
-        valid:   [true, false],
-        invalid: ['false', ['array'], { 'ha' => 'sh' }, 3, 2.42, nil],
-        message: 'expects a value of type Undef or Boolean',
-      },
-      # hiera_merge will be deprecated and needs to be equal to repos_hiera_merge until then
-      'Optional[Boolean] hiera_merge specific - repos_hiera_merge = false' => {
-        name:    ['hiera_merge'],
-        valid:   [false],
-        params:  { repos_hiera_merge: false },
-        invalid: [],
-        message: 'expects a value of type Undef or Hash',
-      },
-      # hiera_merge will be deprecated and needs to be equal to repos_hiera_merge until then
-      'Optional[Boolean] hiera_merge specific - repos_hiera_merge = true' => {
-        name:    ['hiera_merge'],
-        valid:   [true],
-        params:  { repos_hiera_merge: true },
-        invalid: [],
-        message: 'Different values for $repos_hiera_merge (false) and $hiera_merge (true). Please use only one',
-      },
-      # hiera_merge will be deprecated and needs to be equal to repos_hiera_merge until then
-      'Optional[Boolean] hiera_merge specific - invalids' => {
-        name:    ['hiera_merge'],
-        valid:   [true],
-        params:  { repos_hiera_merge: true },
-        invalid: ['false', ['array'], { 'ha' => 'sh' }, 3, 2.42, nil],
-        message: 'expects a value of type Undef or Boolean',
       },
       'Optional[Hash]' => {
         name:    ['repos'],

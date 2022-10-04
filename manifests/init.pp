@@ -39,11 +39,6 @@
 #   Trigger to control merges of all found instances of repositories in Hiera. This is useful for specifying repositories
 #   resources at different levels of the hierarchy and having them all included in the catalog.
 #
-# @param hiera_merge
-#   Trigger to control merges of all found instances of repositories in Hiera. This is useful for specifying repositories
-#   resources at different levels of the hierarchy and having them all included in the catalog.
-#   NOTE: This parameter is being deprecated in favour of repos_hiera_merge
-#
 # @param config_dir_name
 #   Can be used if you want to manage a different directory for repositories.
 #
@@ -65,26 +60,12 @@
 class swrepo (
   Optional[String[1]]            $repotype                 = undef,
   Optional[Hash]                 $repos                    = undef,
-  Optional[Boolean]              $repos_hiera_merge        = undef, # Use 'false' once $hiera_merge is deprecated
-  Optional[Boolean]              $hiera_merge              = undef,
+  Boolean                        $repos_hiera_merge        = false,
   Optional[Stdlib::Absolutepath] $config_dir_name          = undef,
   Boolean                        $config_dir_purge         = false,
   Optional[Hash]                 $apt_setting              = undef,
   Boolean                        $apt_setting_hiera_merge  = false,
 ) {
-  if $hiera_merge != undef {
-    notify { '*** DEPRECATION WARNING***: Using $hiera_merge is deprecated. Please use $repos_hiera_merge instead!': }
-    if $repos_hiera_merge != undef and $repos_hiera_merge != $hiera_merge {
-      fail("Different values for \$repos_hiera_merge (${repos_hiera_merge}) and \$hiera_merge (${hiera_merge}). Please use only one.")
-    } else {
-      $repos_hiera_merge_real = $hiera_merge
-    }
-  } elsif $repos_hiera_merge == undef { # Remove elseif once $hiera_merge is deprecated
-    $repos_hiera_merge_real = false
-  } else {
-    $repos_hiera_merge_real = $repos_hiera_merge
-  }
-
   if $repotype == 'apt' and $facts['os']['family'] != 'Debian' { fail('swrepo::repo::repotype with value apt is only valid on osfamily Debian' ) } #lint:ignore:140chars
 
   case $facts['os']['family'] {
@@ -132,7 +113,7 @@ class swrepo (
   }
 
   if $repos != undef {
-    if $repos_hiera_merge_real == true {
+    if $repos_hiera_merge == true {
       $repos_real = hiera_hash('swrepo::repos')
     } else {
       $repos_real = $repos
