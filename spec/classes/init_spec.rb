@@ -7,6 +7,7 @@ describe 'swrepo' do
           family: 'RedHat',
           release: {
             full: '7.4',
+            major: '7',
           },
         },
         osrelease:       '7.4',
@@ -21,6 +22,7 @@ describe 'swrepo' do
           family: 'Suse',
           release: {
             full: '11.1',
+            major: '11',
           },
         },
         osrelease:       '11.1',
@@ -35,6 +37,7 @@ describe 'swrepo' do
           family: 'Suse',
           release: {
             full: '12.2',
+            major: '12',
           },
         },
         osrelease:       '12.2',
@@ -57,6 +60,7 @@ describe 'swrepo' do
           family: 'Debian',
           release: {
             full: '16.04',
+            major: '16.04',
           },
         },
         osrelease:       '16.04',
@@ -72,7 +76,8 @@ describe 'swrepo' do
       os: {
         family: 'Suse',
         release: {
-          full: '10.0'
+          full: '10.0',
+          major: '10',
         },
       },
       repotype: nil,
@@ -82,7 +87,8 @@ describe 'swrepo' do
       os: {
         family: 'Unknown',
         release: {
-          full: '2.42'
+          full: '2.42',
+          major: '2',
         },
       },
       repotype: nil,
@@ -130,6 +136,7 @@ describe 'swrepo' do
                 family:               facts[:os][:family],
                 release: {
                   full:               facts[:os][:release][:full],
+                  major:              facts[:os][:release][:major],
                 },
               },
               osfamily:               facts[:os][:family],
@@ -165,6 +172,7 @@ describe 'swrepo' do
               family:               facts[:os][:family],
               release: {
                 full:               facts[:os][:release][:full],
+                major:              facts[:os][:release][:major],
               },
             },
             osfamily:               facts[:os][:family],
@@ -197,6 +205,7 @@ describe 'swrepo' do
             family:               facts[:os][:family],
             release: {
               full:               facts[:os][:release][:full],
+              major:              facts[:os][:release][:major],
             },
           },
           osfamily:               facts[:os][:family],
@@ -218,6 +227,7 @@ describe 'swrepo' do
             family:               facts[:os][:family],
             release: {
               full:               facts[:os][:release][:full],
+              major:              facts[:os][:release][:major],
             },
           },
           osfamily:               facts[:os][:family],
@@ -281,6 +291,7 @@ describe 'swrepo' do
             family: 'RedHat',
             release: {
               full: '7.4',
+              major: '7',
             },
           },
           fqdn:   'swrepo.example.local',
@@ -333,6 +344,7 @@ describe 'swrepo' do
             family:               'Debian',
             release: {
               full:               '16.04',
+              major:              '16.04',
             },
           },
           fqdn:            'swrepoapt.example.local',
@@ -393,6 +405,7 @@ describe 'swrepo' do
             family:               facts[:os][:family],
             release: {
               full:               facts[:os][:release][:full],
+              major:              facts[:os][:release][:major],
             },
           },
         }
@@ -406,7 +419,7 @@ describe 'swrepo' do
 
   # ensure parameters only takes intended data types
   describe 'variable type and content validations' do
-    let(:facts) { { os: { family: 'RedHat', release: { full: '7.4' } } } }
+    let(:facts) { { os: { family: 'RedHat', release: { full: '7.4', major: '7' } } } }
 
     mandatory_params = {}
     validations = {

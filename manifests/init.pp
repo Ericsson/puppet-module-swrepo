@@ -62,49 +62,32 @@ class swrepo (
   Optional[Hash]                 $apt_setting              = undef,
   Boolean                        $apt_setting_hiera_merge  = false,
 ) {
-  if $repotype == 'apt' and $facts['os']['family'] != 'Debian' { fail('swrepo::repo::repotype with value apt is only valid on osfamily Debian' ) } #lint:ignore:140chars
+  #lint:ignore:140chars
+  if $repotype == 'apt' and $facts['os']['family'] != 'Debian' { fail('swrepo::repo::repotype with value apt is only valid on osfamily Debian' ) }
 
-  case $facts['os']['family'] {
-    'RedHat': {
-      $repotype_default = 'yum'
-      $config_dir_name_real = '/etc/yum.repos.d'
-      if $config_dir_purge == true {
-        file { "${config_dir_name_real}/redhat.repo":
-          require => File[$config_dir_name_real],
-        }
-      }
+  if $facts['os']['family'] in ['Debian', 'RedHat', 'Suse'] == false or $facts['os']['family'] == 'Suse' and $facts['os']['release']['major'] in ['11','12'] == false {
+    fail("Supported osfamilies are Debian, RedHat and Suse 11/12. Yours identified as <${facts['os']['family']}-${facts['os']['release']['full']}>")
+  }
+  # lint:endignore
+
+  if $facts['os']['family'] == 'RedHat' and $config_dir_purge == true {
+    file { "${config_dir_name}/redhat.repo":
+      require => File[$config_dir_name],
     }
-    'Suse':   {
-      $config_dir_name_real = '/etc/zypp/repos.d'
-      case $facts['os']['release']['full'] {
-        /^(11|12)\./: { $repotype_default = 'zypper' }
-        default:      { fail("Supported osfamilies are Debian, RedHat and Suse 11/12. Yours identified as <${facts['os']['family']}-${facts['os']['release']['full']}>") } #lint:ignore:140chars
-      }
-    }
-    'Debian':  {
-      $repotype_default = 'apt'
-      $config_dir_name_real = undef
-    }
-    default: { fail("Supported osfamilies are Debian, RedHat and Suse 11/12. Yours identified as <${facts['os']['family']}-${facts['os']['release']['full']}>") } #lint:ignore:140chars
   }
 
   # Manage repo directory
-  if $config_dir_purge == true and $config_dir_name_real != undef {
-    file { $config_dir_name_real:
+  if $config_dir_purge == true and $config_dir_name != undef {
+    file { $config_dir_name:
       ensure  => directory,
       recurse => true,
       purge   => true,
     }
   }
 
-  $repotype_real = $repotype ? {
-    undef   => $repotype_default,
-    default => $repotype,
-  }
-
   $defaults = {
-    repotype          => $repotype_real,
-    config_dir        => $config_dir_name_real,
+    repotype          => $repotype,
+    config_dir        => $config_dir_name,
     config_dir_purge  => $config_dir_purge,
   }
 
