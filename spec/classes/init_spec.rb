@@ -150,6 +150,15 @@ describe 'swrepo' do
           it { is_expected.to have_swrepo__repo_resource_count(2) }
           it { is_expected.to contain_swrepo__repo('params-hash1').with_repotype(repotype) }
           it { is_expected.to contain_swrepo__repo('params-hash2').with_repotype(repotype) }
+
+          case "#{facts[:os][:family]}-#{repotype}"
+          when 'Suse-zypper'
+            it { is_expected.to contain_zypprepo('params-hash1') } # only needed for 100% resource coverage
+            it { is_expected.to contain_zypprepo('params-hash2') } # only needed for 100% resource coverage
+          when 'RedHat-yum'
+            it { is_expected.to contain_yumrepo('params-hash1') } # only needed for 100% resource coverage
+            it { is_expected.to contain_yumrepo('params-hash2') } # only needed for 100% resource coverage
+          end
         end
       end
     end
@@ -187,6 +196,9 @@ describe 'swrepo' do
           it { is_expected.to have_swrepo__repo_resource_count(2) }
           # 2 repositories, 2 settings and 1 extra (default file created)
           it { is_expected.to have_apt__setting_resource_count(5) }
+
+          it { is_expected.to contain_apt__source('params-hash1') } # only needed for 100% resource coverage
+          it { is_expected.to contain_apt__source('params-hash2') } # only needed for 100% resource coverage
         else
           it 'fail' do
             expect { is_expected.to contain_class('swrepo') }.to raise_error(Puppet::Error, %r{with value apt is only valid on osfamily Debian})
@@ -279,6 +291,10 @@ describe 'swrepo' do
           end
         end
       end
+
+      if facts[:os][:family] == 'RedHat'
+        it { is_expected.to contain_file('/etc/yum.repos.d/redhat.repo') }
+      end
     end
   end
 
@@ -313,6 +329,9 @@ describe 'swrepo' do
           it { is_expected.to have_swrepo__repo_resource_count(2) }
           it { is_expected.to contain_swrepo__repo('hiera-common').with_baseurl('http://hiera.common/repo') }
           it { is_expected.to contain_swrepo__repo('hiera-fqdn').with_baseurl('http://hiera.fqdn/repo') }
+
+          it { is_expected.to contain_yumrepo('hiera-common') } # only needed for 100% resource coverage
+          it { is_expected.to contain_yumrepo('hiera-fqdn') } # only needed for 100% resource coverage
         end
       end
 

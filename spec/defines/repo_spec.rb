@@ -306,7 +306,7 @@ describe 'swrepo::repo' do
       'Optional[String[1]] for gpgkey_keyid' => {
         name:     ['gpgkey_keyid'],
         params:   { gpgkey_source: 'http://spec.test/repo' }, # mandatory for gpgkey_keyid usage
-        valid:    ['DEADC0DE'],
+        valid:    ['0608B895'],
         invalid:  [['array'], { 'ha' => 'sh' }, 3, 2.42, true],
         message:  'expects a value of type Undef or String',
       },
