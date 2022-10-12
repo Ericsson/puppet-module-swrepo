@@ -196,9 +196,16 @@ describe 'swrepo' do
           it { is_expected.to have_swrepo__repo_resource_count(2) }
           # 2 repositories, 2 settings and 1 extra (default file created)
           it { is_expected.to have_apt__setting_resource_count(5) }
-
+          # from repos_apt_hash
+          it { is_expected.to contain_swrepo__repo('params-hash1').with_baseurl('http://params.hash/repo1') }
+          it { is_expected.to contain_swrepo__repo('params-hash2').with_baseurl('http://params.hash/repo2') }
           it { is_expected.to contain_apt__source('params-hash1') } # only needed for 100% resource coverage
           it { is_expected.to contain_apt__source('params-hash2') } # only needed for 100% resource coverage
+
+          # from apt_setting_hash
+          it { is_expected.to contain_apt__setting('conf-paramshttpproxy') }
+          it { is_expected.to contain_apt__setting('conf-paramshttpsproxy') }
+
         else
           it 'fail' do
             expect { is_expected.to contain_class('swrepo') }.to raise_error(Puppet::Error, %r{with value apt is only valid on osfamily Debian})
@@ -298,123 +305,6 @@ describe 'swrepo' do
     end
   end
 
-  # ensure hiera merging works as intended
-  describe 'with hiera providing data from multiple levels' do
-    describe 'for repos' do
-      let(:facts) do
-        {
-          os: {
-            family: 'RedHat',
-            release: {
-              full: '7.4',
-              major: '7',
-            },
-          },
-          fqdn:   'swrepo.example.local',
-          common: 'common',
-        }
-      end
-
-      context 'when repos is unset' do
-        context 'with repos_hiera_merge set to boolean false' do
-          let(:params) { { repos_hiera_merge: false } }
-
-          it { is_expected.to have_swrepo__repo_resource_count(1) }
-          it { is_expected.to contain_swrepo__repo('hiera-fqdn').with_baseurl('http://hiera.fqdn/repo') }
-        end
-
-        context 'with repos_hiera_merge set to boolean true' do
-          let(:params) { { repos_hiera_merge: true } }
-
-          it { is_expected.to have_swrepo__repo_resource_count(2) }
-          it { is_expected.to contain_swrepo__repo('hiera-common').with_baseurl('http://hiera.common/repo') }
-          it { is_expected.to contain_swrepo__repo('hiera-fqdn').with_baseurl('http://hiera.fqdn/repo') }
-
-          it { is_expected.to contain_yumrepo('hiera-common') } # only needed for 100% resource coverage
-          it { is_expected.to contain_yumrepo('hiera-fqdn') } # only needed for 100% resource coverage
-        end
-      end
-
-      context 'when repos is set to a valid hash' do
-        context 'with repos_hiera_merge set to boolean false' do
-          let(:params) { { repos: repos_hash }.merge({ repos_hiera_merge: false }) }
-
-          it { is_expected.to have_swrepo__repo_resource_count(2) }
-          it { is_expected.to contain_swrepo__repo('params-hash1').with_baseurl('http://params.hash/repo1') }
-          it { is_expected.to contain_swrepo__repo('params-hash2').with_baseurl('http://params.hash/repo2') }
-        end
-
-        context 'with repos_hiera_merge set to boolean true' do
-          let(:params) { { repos: repos_hash }.merge({ repos_hiera_merge: true }) }
-
-          it { is_expected.to have_swrepo__repo_resource_count(2) }
-          it { is_expected.not_to contain_swrepo__repo('params-hash1') }
-          it { is_expected.not_to contain_swrepo__repo('params-hash2') }
-          it { is_expected.to contain_swrepo__repo('hiera-common').with_baseurl('http://hiera.common/repo') }
-          it { is_expected.to contain_swrepo__repo('hiera-fqdn').with_baseurl('http://hiera.fqdn/repo') }
-        end
-      end
-    end
-
-    describe 'for apt_setting' do
-      let(:facts) do
-        {
-          os: {
-            family:               'Debian',
-            release: {
-              full:               '16.04',
-              major:              '16.04',
-            },
-          },
-          fqdn:            'swrepoapt.example.local',
-          osfamily:        'Debian',
-          osrelease:       '16.04',
-          repotype:        'apt',
-          lsbdistid:       'Ubuntu',
-          lsbdistcodename: 'xenial',
-        }
-      end
-
-      context 'when apt_setting is unset' do
-        context 'with apt_setting_hiera_merge set to boolean false' do
-          let(:params) { { apt_setting_hiera_merge: false } }
-
-          it { is_expected.to have_apt__setting_resource_count(1) }
-          it { is_expected.to contain_apt__setting('conf-hierafqdn').with_content('Acquire::http::proxy "https://proxy.hieradomain.tld:8080";') }
-        end
-
-        context 'with apt_setting_hiera_merge set to boolean true' do
-          let(:params) { { apt_setting_hiera_merge: true } }
-
-          it { is_expected.to have_apt__setting_resource_count(2) }
-          it { is_expected.to contain_apt__setting('conf-hieraosfamily').with_content('Acquire::http::proxy "http://proxy.hieradomain.tld:8080";') }
-          it { is_expected.to contain_apt__setting('conf-hierafqdn').with_content('Acquire::http::proxy "https://proxy.hieradomain.tld:8080";') }
-        end
-      end
-
-      context 'when apt_setting is set to a valid hash' do
-        context 'with apt_settinghiera_merge set to boolean false' do
-          let(:params) { { apt_setting: apt_setting_hash }.merge({ apt_setting_hiera_merge: false }) }
-
-          puts(:params)
-          it { is_expected.to have_apt__setting_resource_count(2) }
-          it { is_expected.to contain_apt__setting('conf-paramshttpproxy').with_content('Acquire::http::proxy "http://proxy.domain.tld:8080";') }
-          it { is_expected.to contain_apt__setting('conf-paramshttpsproxy').with_content('Acquire::https::proxy "https://proxy.domain.tld:8080";') }
-        end
-
-        context 'with apt_setting_hiera_merge set to boolean true' do
-          let(:params) { { apt_setting: apt_setting_hash }.merge({ apt_setting_hiera_merge: true }) }
-
-          it { is_expected.to have_apt__setting_resource_count(2) }
-          it { is_expected.not_to contain_apt__setting('conf-paramshttpproxy') }
-          it { is_expected.not_to contain_apt__setting('conf-paramshttpsproxy') }
-          it { is_expected.to contain_apt__setting('conf-hieraosfamily').with_content('Acquire::http::proxy "http://proxy.hieradomain.tld:8080";') }
-          it { is_expected.to contain_apt__setting('conf-hierafqdn').with_content('Acquire::http::proxy "https://proxy.hieradomain.tld:8080";') }
-        end
-      end
-    end
-  end
-
   # ensure it fails on unsupported os
   unsupported_os_families.sort.each do |os, facts|
     describe "when running on unsupported #{os}" do
@@ -443,7 +333,7 @@ describe 'swrepo' do
     mandatory_params = {}
     validations = {
       'Boolean' => {
-        name:    ['repos_hiera_merge', 'config_dir_purge', 'apt_setting_hiera_merge'],
+        name:    ['config_dir_purge'],
         valid:   [true, false],
         invalid: ['false', ['array'], { 'ha' => 'sh' }, 3, 2.42, nil],
         message: 'expects a Boolean value',
