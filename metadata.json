@@ -71,6 +71,13 @@
         "11",
         "12"
       ]
+    },
+    {
+      "operatingsystem": "Ubuntu",
+      "operatingsystemrelease": [
+        "16.04",
+        "18.04"
+      ]
     }
   ],
   "requirements": [
