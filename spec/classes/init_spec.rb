@@ -338,11 +338,11 @@ describe 'swrepo' do
         invalid: ['false', ['array'], { 'ha' => 'sh' }, 3, 2.42, nil],
         message: 'expects a Boolean value',
       },
-      'Optional[Hash]' => {
+      'Hash' => {
         name:    ['repos'],
         valid:   [], # valid hashes are to complex to block test them here.
         invalid: ['string', ['array'], 3, 2.42, true],
-        message: 'expects a value of type Undef or Hash',
+        message: 'expects a Hash value',
       },
       'Optional[Stdlib::Absolutepath]' => {
         name:    ['config_dir_name'],
@@ -356,11 +356,11 @@ describe 'swrepo' do
         invalid: [['array'], { 'ha' => 'sh' }, 3, 2.42, true],
         message: 'expects a value of type Undef or String',
       },
-      'Optional[Hash] apt_setting specific' => {
+      'Hash apt_setting specific' => {
         name:    ['apt_setting'],
         valid:   [], # valid hashes are to complex to block test them here.
         invalid: ['string', ['array'], 3, 2.42, true],
-        message: 'expects a value of type Undef or Hash',
+        message: 'expects a Hash value',
         facts:   { osfamily: 'Debian', osrelease: '16.04', lsbdistid: 'Ubuntu', lsbdistcodename: 'xenial' }
       },
     }

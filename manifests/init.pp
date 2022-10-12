@@ -47,10 +47,10 @@
 #
 class swrepo (
   Optional[String[1]]            $repotype                 = undef,
-  Optional[Hash]                 $repos                    = undef,
+  Hash                           $repos                    = {},
   Optional[Stdlib::Absolutepath] $config_dir_name          = undef,
   Boolean                        $config_dir_purge         = false,
-  Optional[Hash]                 $apt_setting              = undef,
+  Hash                           $apt_setting              = {},
 ) {
   #lint:ignore:140chars
   if $repotype == 'apt' and $facts['os']['family'] != 'Debian' { fail('swrepo::repo::repotype with value apt is only valid on osfamily Debian' ) }
@@ -81,11 +81,6 @@ class swrepo (
     config_dir_purge  => $config_dir_purge,
   }
 
-  if $repos != undef {
-    create_resources('swrepo::repo', $repos, $defaults)
-  }
-
-  if $apt_setting != undef {
-    create_resources('apt::setting', $apt_setting)
-  }
+  create_resources('swrepo::repo', $repos, $defaults)
+  create_resources('apt::setting', $apt_setting)
 }
