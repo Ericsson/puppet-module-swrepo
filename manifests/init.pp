@@ -46,13 +46,13 @@
 #       content: Acquire::http::proxy "http://proxy.hieradomain.tld:8080";
 #
 class swrepo (
-  Optional[String[1]]            $repotype                 = undef,
-  Hash                           $repos                    = {},
-  Optional[Stdlib::Absolutepath] $config_dir_name          = undef,
   Boolean                        $config_dir_purge         = false,
   Hash                           $apt_setting              = {},
+  Hash                           $repos                    = {},
+  Optional[Stdlib::Absolutepath] $config_dir_name          = undef,
+  Optional[String[1]]            $repotype                 = undef,
 ) {
-  #lint:ignore:140chars
+  # lint:ignore:140chars
   if $repotype == 'apt' and $facts['os']['family'] != 'Debian' { fail('swrepo::repo::repotype with value apt is only valid on osfamily Debian' ) }
 
   if $facts['os']['family'] in ['Debian', 'RedHat', 'Suse'] == false or $facts['os']['family'] == 'Suse' and $facts['os']['release']['major'] in ['11','12'] == false {
@@ -82,5 +82,10 @@ class swrepo (
   }
 
   create_resources('swrepo::repo', $repos, $defaults)
-  create_resources('apt::setting', $apt_setting)
+
+  if $apt_setting != {} and $facts['os']['family'] == 'Debian' {
+    create_resources('apt::setting', $apt_setting)
+  } elsif $apt_setting != {} {
+    fail('swrepo::repo::apt_setting is only valid on osfamily Debian' )
+  }
 }
