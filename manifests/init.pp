@@ -60,18 +60,20 @@ class swrepo (
   }
   # lint:endignore
 
-  if $facts['os']['family'] == 'RedHat' and $config_dir_purge == true {
-    file { "${config_dir_name}/redhat.repo":
-      require => File[$config_dir_name],
+  if $config_dir_purge == true {
+    # Manage repo directory
+    if $config_dir_name != undef {
+      file { $config_dir_name:
+        ensure  => directory,
+        recurse => true,
+        purge   => true,
+      }
     }
-  }
 
-  # Manage repo directory
-  if $config_dir_purge == true and $config_dir_name != undef {
-    file { $config_dir_name:
-      ensure  => directory,
-      recurse => true,
-      purge   => true,
+    if $facts['os']['family'] == 'RedHat' {
+      file { "${config_dir_name}/redhat.repo":
+        require => File[$config_dir_name],
+      }
     }
   }
 
@@ -83,7 +85,7 @@ class swrepo (
 
   create_resources('swrepo::repo', $repos, $defaults)
 
-  if $apt_setting != {} and $facts['os']['family'] == 'Debian' {
+  if $facts['os']['family'] == 'Debian' {
     create_resources('apt::setting', $apt_setting)
   } elsif $apt_setting != {} {
     fail('swrepo::repo::apt_setting is only valid on osfamily Debian' )
