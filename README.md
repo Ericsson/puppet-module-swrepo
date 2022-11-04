@@ -84,20 +84,6 @@ swrepo::repos:
 *The above will add two repositories: repo1 with defaults and repo2 with autorefresh and priority parameters changed.*
 
 ---
-#### repos_hiera_merge (boolean / optional)
-Trigger to control merges of all found instances of repositories in Hiera. This is useful for specifying repositories resources at different levels of the hierarchy and having them all included in the catalog.
-
-- Default: ***false***
-
----
-#### hiera_merge (boolean / optional)
-Trigger to control merges of all found instances of repositories in Hiera. This is useful for specifying repositories resources at different levels of the hierarchy and having them all included in the catalog.
-
-NOTE: This parameter is being deprecated in favour of repos_hiera_merge
-
-- Default: ***undef***
-
----
 #### config_dir_name (string / optional)
 Can be used if you want to manage a different directory for repositories.
 
@@ -121,22 +107,6 @@ swrepo::apt_setting:
   conf-httpproxy:
     content: Acquire::http::proxy "http://proxy.hieradomain.tld:8080";
 ```
-
----
-#### apt_setting_hiera_merge (boolean / optional)
-Trigger to control merges of all found instances of apt_setting in Hiera. This is useful for specifying repositories resources at different levels of the hierarchy and having them all included in the catalog.
-
-- Default: ***false***
-
-# Define Descriptions
-## Defined type `swrepo::repo`
-### Description
-
-The `swrepo::repo` definition is used to configure repositories.
-
-You can also specify `swrepo::repos` from hiera as a hash of repositories and they will be created by the base class using create_resources.
-
-### Parameters
 
 ---
 #### baseurl (string / mandatory)

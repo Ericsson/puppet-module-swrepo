@@ -1,0 +1,3 @@
+---
+swrepo::config_dir_name: '/etc/yum.repos.d'
+swrepo::repotype: 'yum'

@@ -77,20 +77,33 @@ define swrepo::repo (
   Optional[Stdlib::Absolutepath]                       $config_dir       = undef,
   Optional[Boolean]                                    $config_dir_purge = undef,
 ) {
-  # variable validations
-  if $gpgkey_keyid != undef and $gpgkey_source == undef { fail('swrepo::repo::gpgkey_keyid is specified but swrepo::repo::gpgkey_source is missing.') } #lint:ignore:140chars
-
   # variable preparations
-  if $autorefresh == undef {
-    $autorefresh_num = undef
-  } else {
-    $autorefresh_num = bool2num(str2bool($autorefresh))
+  $autorefresh_num = $autorefresh ? {
+    false   => 0,
+    true    => 1,
+    default => undef,
   }
 
-  if $downcase_baseurl == true {
-    $baseurl_real = downcase($baseurl)
-  } else {
-    $baseurl_real = $baseurl
+  $gpgcheck_num = $gpgcheck ? {
+    false   => 0,
+    true    => 1,
+    default => undef,
+  }
+
+  $keeppackages_num = $keeppackages ? {
+    false   => 0,
+    true    => 1,
+    default => undef,
+  }
+
+  $baseurl_real = $downcase_baseurl ? {
+    true    => downcase($baseurl),
+    default => $baseurl,
+  }
+
+  $priority_num = $priority ? {
+    undef   => undef,
+    default => 0 + $priority # convert stringified to number
   }
 
   if $gpgkey_keyid != undef and $gpgkey_source != undef {
@@ -99,25 +112,11 @@ define swrepo::repo (
     $gpgkey_hash = undef
   }
 
-  if $gpgcheck == undef {
-    $gpgcheck_num = undef
-  } else {
-    $gpgcheck_num = bool2num(str2bool($gpgcheck))
-  }
-
-  if $keeppackages == undef {
-    $keeppackages_num = undef
-  } else {
-    $keeppackages_num = bool2num(str2bool($keeppackages))
-  }
-
-  if $priority == undef {
-    $priority_num = undef
-  } else {
-    $priority_num = 0 + $priority # convert stringified to number
-  }
-
   # functionality
+  if $gpgkey_keyid != undef and $gpgkey_source == undef {
+    fail('swrepo::repo::gpgkey_keyid is specified but swrepo::repo::gpgkey_source is missing.')
+  }
+
   case $repotype {
     'yum': {
       yumrepo { $name:

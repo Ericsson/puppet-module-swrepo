@@ -1,5 +1,0 @@
----
-swrepo::apt_setting:
-  conf-hierafqdn:
-    notify_update: false
-    content: Acquire::http::proxy "https://proxy.hieradomain.tld:8080";

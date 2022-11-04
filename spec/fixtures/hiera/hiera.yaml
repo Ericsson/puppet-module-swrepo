@@ -4,6 +4,4 @@
 :yaml:
   :datadir: 'spec/fixtures/hiera'
 :hierarchy:
-  - fqdn/%{fqdn}
-  - osfamily/%{osfamily}
   - common/%{common}
